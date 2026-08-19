@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MycoHaven Pharma Digital Management System (MPDMS)</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-dark">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-flask-vial"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>MycoHaven</h1>
+                    <span>PHARMA PLATFORM</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- VENDOR LEVEL (Visible only to Super Admin) -->
+                <div class="nav-section-label" id="section-superadmin-label">Vendor Administration</div>
+                <a href="#super-admin-console" class="nav-item" id="nav-super-admin-console">
+                    <i class="fa-solid fa-building-shield"></i>
+                    <span>Super Admin Console</span>
+                </a>
+
+                <div class="nav-section-label">General</div>
+                <a href="#dashboard" class="nav-item active" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <div class="nav-section-label">Configuration (Masters)</div>
+                <a href="#user-master" class="nav-item" id="nav-user-master">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>User Master</span>
+                </a>
+                <a href="#user-group-master" class="nav-item" id="nav-user-group-master">
+                    <i class="fa-solid fa-users-cog"></i>
+                    <span>User Group Master</span>
+                </a>
+                <a href="#department-master" class="nav-item" id="nav-department-master">
+                    <i class="fa-solid fa-sitemap"></i>
+                    <span>Departments</span>
+                </a>
+                <a href="#area-master" class="nav-item" id="nav-area-master">
+                    <i class="fa-solid fa-door-open"></i>
+                    <span>Area Master</span>
+                </a>
+                <a href="#equipment-master" class="nav-item" id="nav-equipment-master">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Equipment Master</span>
+                </a>
+                <a href="#product-master" class="nav-item" id="nav-product-master">
+                    <i class="fa-solid fa-prescription-bottle-medical"></i>
+                    <span>Product Master</span>
+                </a>
+                <a href="#annexure-master" class="nav-item" id="nav-annexure-master">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>Annexure Master</span>
+                </a>
+                <a href="#workflow-config" class="nav-item" id="nav-workflow-config">
+                    <i class="fa-solid fa-diagram-next"></i>
+                    <span>Workflow Config</span>
+                </a>
+                <a href="#bmr-template-master" class="nav-item" id="nav-bmr-template-master">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span>BMR Template Master</span>
+                </a>
+                
+                <div class="nav-section-label">Production Floor</div>
+                <a href="#active-batches" class="nav-item" id="nav-active-batches">
+                    <i class="fa-solid fa-industry"></i>
+                    <span>Batch Execution</span>
+                </a>
+                <a href="#area-logbook" class="nav-item" id="nav-area-logbook">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Area Logbook</span>
+                </a>
+                <a href="#equipment-logbook" class="nav-item" id="nav-equipment-logbook">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Equipment Logbook</span>
+                </a>
+
+                <div class="nav-section-label">Compliance</div>
+                <a href="#audit-trail" class="nav-item" id="nav-audit-trail">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Audit Trail</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="compliance-badge">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="sidebar-tenant-badge">Aura Pharma Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <div class="workspace-wrapper">
+            <!-- Header Bar -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="mobile-toggle" id="mobile-sidebar-toggle" aria-label="Toggle navigation menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="header-title">
+                        <h2 id="current-view-title">Dashboard Overview</h2>
+                        <p id="current-view-subtitle">Real-time batch status and compliance monitoring</p>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="system-time" id="system-time-display">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>Jun 21, 2026 18:45 PM</span>
+                    </div>
+
+                    <!-- Multi-Tenant Selector Switchers (Demo helper) -->
+                    <div class="user-session-control">
+                        <div class="session-info">
+                            <span class="user-label">Active Company</span>
+                            <select id="demo-company-selector" class="user-selector-dropdown" style="max-width: 160px;">
+                                <!-- Populated dynamically (SYSTEM, AURA, BIOC) -->
+                            </select>
+                        </div>
+                        <div class="session-info ml-10">
+                            <span class="user-label">Logged in as:</span>
+                            <span class="user-role-badge" id="header-user-role">Super Admin</span>
+                        </div>
+                        <select id="demo-user-selector" class="user-selector-dropdown" style="max-width: 180px;">
+                            <!-- Populated dynamically based on selected company -->
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Panel Container -->
+            <main class="content-panel" id="main-panel-container">
+                
+                <!-- 0. VENDOR SUPER ADMIN CONSOLE -->
+                <section id="panel-super-admin-console" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Tenant Client Companies</h3>
+                        <button class="btn btn-primary" id="btn-add-company">
+                            <i class="fa-solid fa-building-circle-plus"></i> Register Customer Tenant
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-companies">
+                                <thead>
+                                    <tr>
+                                        <th>Company ID</th>
+                                        <th>Company Name</th>
+                                        <th>License Status</th>
+                                        <th>Expiry Date</th>
+                                        <th>Enabled Modules</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody><!-- Populated dynamically --></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 1. DASHBOARD PANEL -->
+                <section id="panel-dashboard" class="app-panel active">
+                    <div class="dashboard-grid">
+                        <div class="kpi-row">
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Active Batches</span>
+                                    <div class="kpi-icon icon-blue"><i class="fa-solid fa-industry"></i></div>
+                                </div>
+                                <div class="kpi-value" id="kpi-active-batches">0</div>
+                                <div class="kpi-footer">In-progress on manufacturing floor</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Pending Approvals</span>
+                                    <div class="kpi-icon icon-orange"><i class="fa-solid fa-file-invoice"></i></div>
+                                </div>
+                                <div class="kpi-value" id="kpi-pending-approvals">0</div>
+                                <div class="kpi-footer">Requires review or signature</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Active Equipment</span>
+                                    <div class="kpi-icon icon-green"><i class="fa-solid fa-plug-circle-check"></i></div>
+                                </div>
+                                <div class="kpi-value" id="kpi-active-equipment">0</div>
+                                <div class="kpi-footer">Currently operational assets</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Calibration Alerts</span>
+                                    <div class="kpi-icon icon-red" id="kpi-calibration-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                </div>
+                                <div class="kpi-value" id="kpi-calibration-alerts">0</div>
+                                <div class="kpi-footer">Equipment due for calibration</div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-charts-grid">
+                            <div class="chart-card">
+                                <h3>Batch Status Distribution</h3>
+                                <div class="chart-container" id="batch-chart-container"></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Area Utilization</h3>
+                                <div class="chart-container" id="area-chart-container"></div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-logs-grid">
+                            <div class="logs-card">
+                                <div class="card-header-actions">
+                                    <h3>Recent Audit Trail Logs</h3>
+                                    <a href="#audit-trail" class="card-link-action">View Full Trail</a>
+                                </div>
+                                <div class="audit-list-mini" id="dashboard-audit-logs"></div>
+                            </div>
+                            <div class="logs-card">
+                                <h3>Active Areas Status</h3>
+                                <div class="area-list-mini" id="dashboard-areas-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. USER MASTER PANEL -->
+                <section id="panel-user-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Employee Registry</h3>
+                        <button class="btn btn-primary" id="btn-add-user">
+                            <i class="fa-solid fa-user-plus"></i> Add Employee
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-users">
+                                <thead>
+                                    <tr>
+                                        <th>Employee ID</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Role / Designation</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. USER GROUP MASTER PANEL -->
+                <section id="panel-user-group-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Roles & Permission Policies</h3>
+                    </div>
+                    <div class="grid-two-cols">
+                        <div class="card card-role-selector">
+                            <h4>Select Role</h4>
+                            <div class="role-list" id="role-selector-list"></div>
+                        </div>
+                        <div class="card card-role-permissions">
+                            <h4 id="selected-role-title">Select a role to configure</h4>
+                            <p class="section-desc">Manage granular permissions for manufacturing execution, review, and QA verification steps.</p>
+                            <form id="role-permissions-form">
+                                <div class="permissions-grid" id="permissions-container"></div>
+                                <button type="submit" class="btn btn-primary mt-20" id="btn-save-permissions" disabled>
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Permissions
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. DEPARTMENT MASTER PANEL -->
+                <section id="panel-department-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Departments</h3>
+                        <button class="btn btn-primary" id="btn-add-department">
+                            <i class="fa-solid fa-plus"></i> Add Department
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-departments">
+                                <thead>
+                                    <tr>
+                                        <th>Department Name</th>
+                                        <th>Assigned Personnel</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. AREA MASTER PANEL -->
+                <section id="panel-area-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Manufacturing Area Directory</h3>
+                        <button class="btn btn-primary" id="btn-add-area">
+                            <i class="fa-solid fa-plus"></i> Add Area
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-areas">
+                                <thead>
+                                    <tr>
+                                        <th>Area Code</th>
+                                        <th>Area Name</th>
+                                        <th>Department</th>
+                                        <th>Logbook Status</th>
+                                        <th>Operation Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. EQUIPMENT MASTER PANEL -->
+                <section id="panel-equipment-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Equipment Directory</h3>
+                        <button class="btn btn-primary" id="btn-add-equipment">
+                            <i class="fa-solid fa-plus"></i> Register Equipment
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-equipments">
+                                <thead>
+                                    <tr>
+                                        <th>Equipment ID</th>
+                                        <th>Equipment Name</th>
+                                        <th>Area Location</th>
+                                        <th>Make & Model</th>
+                                        <th>Calibration Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. PRODUCT MASTER PANEL -->
+                <section id="panel-product-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Product Catalog</h3>
+                        <button class="btn btn-primary" id="btn-add-product">
+                            <i class="fa-solid fa-plus"></i> Add Product
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-products">
+                                <thead>
+                                    <tr>
+                                        <th>Product Code</th>
+                                        <th>Product Name</th>
+                                        <th>Standard Batch Size</th>
+                                        <th>Manufacturing Steps</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7B. ANNEXURE MASTER PANEL -->
+                <section id="panel-annexure-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Annexure Templates</h3>
+                        <button class="btn btn-primary" id="btn-add-annexure">
+                            <i class="fa-solid fa-file-circle-plus"></i> Define Annexure
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-annexures">
+                                <thead>
+                                    <tr>
+                                        <th>Annexure ID</th>
+                                        <th>Annexure Name</th>
+                                        <th>Columns Configured</th>
+                                        <th>Check Items Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7C. WORKFLOW CONFIG PANEL -->
+                <section id="panel-workflow-config" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Approval Workflows</h3>
+                        <button class="btn btn-primary" id="btn-add-workflow">
+                            <i class="fa-solid fa-route"></i> Configure Workflow Route
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-workflows">
+                                <thead>
+                                    <tr>
+                                        <th>Workflow Name</th>
+                                        <th>Workflow Sequence</th>
+                                        <th>Steps Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. BMR TEMPLATE MASTER PANEL -->
+                <section id="panel-bmr-template-master" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Digital BMR Templates</h3>
+                        <button class="btn btn-primary" id="btn-create-template">
+                            <i class="fa-solid fa-file-circle-plus"></i> Create BMR Template
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-bmr-templates">
+                                <thead>
+                                    <tr>
+                                        <th>Template Name</th>
+                                        <th>Target Product</th>
+                                        <th>BMR Code</th>
+                                        <th>Number of Steps</th>
+                                        <th>Annexure Attached</th>
+                                        <th>Workflow Applied</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. ACTIVE BATCHES PANEL -->
+                <section id="panel-active-batches" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Batch Manufacturing Executions</h3>
+                        <button class="btn btn-primary" id="btn-create-batch">
+                            <i class="fa-solid fa-circle-plus"></i> Initiate Batch (Create Batch)
+                        </button>
+                    </div>
+                    
+                    <div class="batch-filters">
+                        <button class="filter-tab active" data-filter="all">All Batches</button>
+                        <button class="filter-tab" data-filter="active">In Progress</button>
+                        <button class="filter-tab" data-filter="review">Pending Review</button>
+                        <button class="filter-tab" data-filter="approve">Pending Approval</button>
+                        <button class="filter-tab" data-filter="completed">Released / Closed</button>
+                    </div>
+
+                    <div class="grid-three-cols" id="batches-grid-list"></div>
+                </section>
+
+                <!-- 10. BATCH EXECUTION DETAIL PANEL -->
+                <section id="panel-batch-execution" class="app-panel">
+                    <div class="batch-execution-header">
+                        <div class="execution-meta">
+                            <button class="btn btn-secondary btn-sm mb-10" id="btn-back-to-batches">
+                                <i class="fa-solid fa-arrow-left"></i> Back to Batches
+                            </button>
+                            <div class="batch-main-info">
+                                <h3 id="exec-batch-number">Batch # B260621-01</h3>
+                                <span class="badge" id="exec-batch-status">In Progress</span>
+                            </div>
+                            <p id="exec-product-info">Product: Paracetamol 500mg</p>
+                        </div>
+                        <div class="execution-actions" id="batch-actions-container"></div>
+                    </div>
+
+                    <div class="batch-execution-layout">
+                        <!-- Steps Navigation Sidebar -->
+                        <div class="execution-sidebar-steps">
+                            <h4>Manufacturing Steps</h4>
+                            <div class="steps-progress-list" id="exec-steps-list"></div>
+                            
+                            <!-- Attached Annexure navigation block -->
+                            <div id="exec-annexure-nav-section" style="margin-top: 20px; border-top: 1px solid var(--color-border); padding-top: 15px; display: none;">
+                                <h4 style="font-size: 11px;">Attached Annexure</h4>
+                                <button class="step-nav-btn mt-10" id="btn-nav-exec-annexure">
+                                    <span><i class="fa-solid fa-table-cells"></i> Record Sheet</span>
+                                    <div class="step-check-icon">
+                                        <i class="fa-solid fa-circle" id="exec-annexure-check-icon"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Step Execution Form -->
+                        <div class="execution-step-content card">
+                            <div id="execution-step-normal-view">
+                                <div class="step-header">
+                                    <h3 id="active-step-title">1. Material Dispensing</h3>
+                                    <span class="step-status-badge" id="active-step-status">Pending Operator Sign-off</span>
+                                </div>
+                                
+                                <div class="step-body-content" id="active-step-form-container"></div>
+
+                                <div class="step-compliance-logs border-top pt-20 mt-20">
+                                    <h4>Area & Equipment Logs</h4>
+                                    <div class="grid-two-cols">
+                                        <div class="mini-log-card">
+                                            <h5><i class="fa-solid fa-door-open"></i> Area Usage Log</h5>
+                                            <div id="step-area-log-status">No Area logged</div>
+                                        </div>
+                                        <div class="mini-log-card">
+                                            <h5><i class="fa-solid fa-gears"></i> Equipment Log</h5>
+                                            <div id="step-equipment-log-status">No Equipment logged</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="step-sign-off-section border-top pt-20 mt-20">
+                                    <div id="step-signoff-status-msg"></div>
+                                    <div id="step-signoff-action-area">
+                                        <button class="btn btn-success" id="btn-sign-step">
+                                            <i class="fa-solid fa-signature"></i> Sign and Complete Step
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tabular Annexure form execution view (toggled in production.js) -->
+                            <div id="execution-step-annexure-view" style="display: none;">
+                                <div class="step-header">
+                                    <h3 id="exec-annexure-title">Annexure Checksheet</h3>
+                                    <span class="step-status-badge" id="exec-annexure-status">Incomplete</span>
+                                </div>
+                                <div style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px;">
+                                    Please fill out the requested quality check parameter rows. Each row completion represents a GMP record entry.
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="data-table" id="table-exec-annexure-grid">
+                                        <thead><!-- Dynamic headers --></thead>
+                                        <tbody><!-- Dynamic rows --></tbody>
+                                    </table>
+                                </div>
+                                <div class="step-sign-off-section border-top pt-20 mt-20">
+                                    <div id="annexure-signoff-status-msg"></div>
+                                    <div id="annexure-signoff-action-area">
+                                        <button class="btn btn-success" id="btn-sign-annexure">
+                                            <i class="fa-solid fa-signature"></i> Verify & Sign Annexure
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 11. AREA LOGBOOK PANEL -->
+                <section id="panel-area-logbook" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Area Cleanliness & Usage Logbook</h3>
+                        <button class="btn btn-primary btn-sm" id="btn-add-manual-area-log">
+                            <i class="fa-solid fa-broom"></i> Record Manual e-Log Cleaning
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-area-logbook">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Area Code</th>
+                                        <th>Area Name</th>
+                                        <th>Activity Logged</th>
+                                        <th>Batch Associated</th>
+                                        <th>Operator Sign-off</th>
+                                        <th>Clean Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 12. EQUIPMENT LOGBOOK PANEL -->
+                <section id="panel-equipment-logbook" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Equipment Usage & Cleaning Logbook</h3>
+                        <button class="btn btn-primary btn-sm" id="btn-add-manual-equipment-log">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> Record Manual e-Log Activity
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-equipment-logbook">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Equipment ID</th>
+                                        <th>Equipment Name</th>
+                                        <th>Activity Logged</th>
+                                        <th>Batch Associated</th>
+                                        <th>Operator Sign-off</th>
+                                        <th>Operational State</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 13. AUDIT TRAIL PANEL -->
+                <section id="panel-audit-trail" class="app-panel">
+                    <div class="panel-header-actions">
+                        <h3>Chronological Audit Trail</h3>
+                        <div class="audit-filters-container">
+                            <div class="form-group flex-row">
+                                <input type="text" placeholder="Search logs (action, description)..." id="audit-search" class="form-input">
+                                <select id="audit-filter-user" class="form-input select-sm">
+                                    <option value="">All Users</option>
+                                </select>
+                                <select id="audit-filter-action" class="form-input select-sm">
+                                    <option value="">All Actions</option>
+                                    <option value="LOGIN">User Login</option>
+                                    <option value="CREATE">Record Created</option>
+                                    <option value="UPDATE">Record Updated</option>
+                                    <option value="DELETE">Record Deleted</option>
+                                    <option value="BATCH_SIGN">Batch Step Sign-off</option>
+                                    <option value="BATCH_WORKFLOW">Workflow State Change</option>
+                                </select>
+                                <button class="btn btn-secondary" id="btn-export-audit">
+                                    <i class="fa-solid fa-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-audit-trail">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Action Type</th>
+                                        <th>Details</th>
+                                        <th>IP/Location</th>
+                                        <th>Verification</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- DYNAMIC DIALOG MODALS -->
+    
+    <!-- 0. CREATE COMPANY MODAL (Super Admin) -->
+    <div class="modal" id="modal-company">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Register Customer Tenant Company</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-company">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="company-id">Company Unique ID (Code)</label>
+                        <input type="text" id="company-id" class="form-input" placeholder="e.g. APEX" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company-name">Company Name</label>
+                        <input type="text" id="company-name" class="form-input" placeholder="e.g. Apex Pharmaceuticals Ltd." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company-expiry">License Expiry Date</label>
+                        <input type="date" id="company-expiry" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable Platform Modules</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;">
+                            <label class="permission-checkbox-card">
+                                <input type="checkbox" name="company-modules" value="eBMR" checked> <span>eBMR (Core)</span>
+                            </label>
+                            <label class="permission-checkbox-card">
+                                <input type="checkbox" name="company-modules" value="LIMS"> <span>LIMS (Lab)</span>
+                            </label>
+                            <label class="permission-checkbox-card">
+                                <input type="checkbox" name="company-modules" value="QMS"> <span>QMS (Quality)</span>
+                            </label>
+                            <label class="permission-checkbox-card">
+                                <input type="checkbox" name="company-modules" value="DMS"> <span>DMS (Docs)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Company</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 1. ELECTRONIC SIGNATURE MODAL -->
+    <div class="modal" id="modal-esignature">
+        <div class="modal-content modal-md glass-card">
+            <div class="modal-header">
+                <h3>Electronic Signature Verification</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="esign-warning-banner">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <p>Signing this step represents your legally binding electronic signature. It will be recorded in the system audit trail along with a date-time stamp and your active role.</p>
+                </div>
+                <form id="form-esignature">
+                    <div class="form-group mt-15">
+                        <label for="esign-user-display">Signing User</label>
+                        <input type="text" id="esign-user-display" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="esign-user-role">Signing Role</label>
+                        <input type="text" id="esign-user-role" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="esign-purpose">Signature Purpose / Meaning</label>
+                        <input type="text" id="esign-purpose" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="esign-pin">Enter Security PIN (Verification)</label>
+                        <input type="password" id="esign-pin" class="form-input" placeholder="Enter your secret login PIN" required autocomplete="current-password">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                        <button type="submit" class="btn btn-success" id="btn-esign-confirm">
+                            <i class="fa-solid fa-check-double"></i> Certify Signature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CREATE USER MODAL -->
+    <div class="modal" id="modal-user">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3 id="modal-user-title">Add Employee</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-user">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="user-emp-id">Employee ID</label>
+                        <input type="text" id="user-emp-id" class="form-input" placeholder="e.g. EMP1024" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-name">Employee Full Name</label>
+                        <input type="text" id="user-name" class="form-input" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-email">Email Address</label>
+                        <input type="email" id="user-email" class="form-input" placeholder="e.g. john@mycohaven.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-designation">Designation</label>
+                        <input type="text" id="user-designation" class="form-input" placeholder="e.g. Production Operator">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-dept">Department</label>
+                        <select id="user-dept" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-type">User Type</label>
+                        <select id="user-type" class="form-input" required>
+                            <option value="Master User">Master User (Admin/Config)</option>
+                            <option value="Production User">Production User (Execution)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-pin">Security PIN (4-6 digits for ESIGN)</label>
+                        <input type="password" id="user-pin" class="form-input" placeholder="e.g. 1234" required pattern="\d{4,6}">
+                    </div>
+                    <div class="form-group">
+                        <label>Permission Levels</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="View"> <span style="font-size: 11px;">View</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="Create"> <span style="font-size: 11px;">Create</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="Edit"> <span style="font-size: 11px;">Edit</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="Submit"> <span style="font-size: 11px;">Submit</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="Review"> <span style="font-size: 11px;">Review</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-permissions" value="Approve"> <span style="font-size: 11px;">Approve</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Enabled Platform Modules Access</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="Masters"> <span style="font-size: 11px;">Masters</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="eLogbook"> <span style="font-size: 11px;">eLogbook</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="eBMR"> <span style="font-size: 11px;">eBMR</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="ELN"> <span style="font-size: 11px;">ELN</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="LIMS"> <span style="font-size: 11px;">LIMS</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="QMS"> <span style="font-size: 11px;">QMS</span>
+                            </label>
+                            <label class="permission-checkbox-card" style="padding: 6px 10px;">
+                                <input type="checkbox" name="user-modules" value="Reports"> <span style="font-size: 11px;">Reports</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group flex-row align-center">
+                        <input type="checkbox" id="user-active" checked>
+                        <label for="user-active" class="ml-10">Account Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. CREATE DEPARTMENT MODAL -->
+    <div class="modal" id="modal-department">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Add Department</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-department">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="dept-name">Department Name</label>
+                        <input type="text" id="dept-name" class="form-input" placeholder="e.g. Quality Assurance" required>
+                    </div>
+                    <div class="form-group flex-row align-center">
+                        <input type="checkbox" id="dept-active" checked>
+                        <label for="dept-active" class="ml-10">Department Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. CREATE AREA MODAL -->
+    <div class="modal" id="modal-area">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3 id="modal-area-title">Configure Manufacturing Area</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-area">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="area-code">Area Code</label>
+                        <input type="text" id="area-code" class="form-input" placeholder="e.g. COMP-01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="area-name">Area Name</label>
+                        <input type="text" id="area-name" class="form-input" placeholder="e.g. Compression Room 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="area-dept">Department Coordinator</label>
+                        <select id="area-dept" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="area-status">Operation Status</label>
+                        <select id="area-status" class="form-input" required>
+                            <option value="Active">Operational / Clean</option>
+                            <option value="Dirty">Needs Cleaning / Clearing</option>
+                            <option value="Maintenance">Maintenance In Progress</option>
+                            <option value="Inactive">Decommissioned</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Area</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. REGISTER EQUIPMENT MODAL -->
+    <div class="modal" id="modal-equipment">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3 id="modal-equipment-title">Register Equipment</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-equipment">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="equip-id">Equipment ID</label>
+                        <input type="text" id="equip-id" class="form-input" placeholder="e.g. E-COMP-20" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-name">Equipment Name</label>
+                        <input type="text" id="equip-name" class="form-input" placeholder="e.g. High Speed Tablet Compression" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-area">Area Location</label>
+                        <select id="equip-area" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-make">Make / Manufacturer</label>
+                        <input type="text" id="equip-make" class="form-input" placeholder="e.g. Fette" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-model">Model Number</label>
+                        <input type="text" id="equip-model" class="form-input" placeholder="e.g. FE55" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-calibration">Calibration Due Date</label>
+                        <input type="date" id="equip-calibration" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="equip-status">Equipment Status</label>
+                        <select id="equip-status" class="form-input" required>
+                            <option value="Active">Available / Clean</option>
+                            <option value="In Use">In Production</option>
+                            <option value="Dirty">Requires Cleaning</option>
+                            <option value="Maintenance">Under Calibration/Repair</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. CREATE PRODUCT MODAL -->
+    <div class="modal" id="modal-product">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3 id="modal-product-title">Add Product Details</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-product">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="prod-code">Product Code</label>
+                        <input type="text" id="prod-code" class="form-input" placeholder="e.g. PC-500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-name">Product Name</label>
+                        <input type="text" id="prod-name" class="form-input" placeholder="e.g. Paracetamol Tablets" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-size">Standard Batch Size (kg / units)</label>
+                        <input type="text" id="prod-size" class="form-input" placeholder="e.g. 500 kg" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7A. CREATE ANNEXURE TEMPLATE MODAL -->
+    <div class="modal" id="modal-annexure">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Define Dynamic Annexure Checksheet</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-annexure">
+                <div class="modal-body max-h-500 overflow-y">
+                    <div class="form-group">
+                        <label for="annexure-uid">Annexure Reference ID</label>
+                        <input type="text" id="annexure-uid" class="form-input" placeholder="e.g. ANX-LC-01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="annexure-name">Annexure Title</label>
+                        <input type="text" id="annexure-name" class="form-input" placeholder="e.g. Area Cleaning Line Clearance Log" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="annexure-cols">Columns (comma separated list)</label>
+                        <input type="text" id="annexure-cols" class="form-input" placeholder="e.g. Check Parameter, Status (Pass/Fail), Operator Sign" value="Check Item, Verified (Yes/No), Remarks" required>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="margin-bottom: 0;">Tabular Row Checklist Items</label>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-annexure-row-item" style="padding: 2px 8px; font-size: 11px;">
+                                <i class="fa-solid fa-plus"></i> Add Row
+                            </button>
+                        </div>
+                        <div id="annexure-rows-builder-container" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Dynamic Row Builders inputs -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish Annexure</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7B. CREATE WORKFLOW CONFIG MODAL -->
+    <div class="modal" id="modal-workflow">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Configure Workflow Path Route</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-workflow">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="workflow-name-input">Workflow Route Name</label>
+                        <input type="text" id="workflow-name-input" class="form-input" placeholder="e.g. Standard Release Loop" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Sequential Step Approval Roles (Check in order of signatures)</label>
+                        <div id="workflow-steps-list-checkboxes" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                            <!-- Render dynamic roles checkboxes -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Workflow Route</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7C. BMR TEMPLATE BUILDER MODAL -->
+    <div class="modal" id="modal-bmr-template">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="modal-bmr-template-title">Define BMR Template</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-bmr-template">
+                <div class="modal-body max-h-500 overflow-y">
+                    <div class="grid-two-cols">
+                        <div class="form-group">
+                            <label for="bmr-code">BMR Reference Code</label>
+                            <input type="text" id="bmr-code" class="form-input" placeholder="e.g. BMR-PARA-500" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bmr-product">Target Product</label>
+                            <select id="bmr-product" class="form-input" required></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bmr-name">BMR Template Name / Description</label>
+                        <input type="text" id="bmr-name" class="form-input" placeholder="e.g. Granulation & Compression Batch Record" required>
+                    </div>
+                    
+                    <div class="grid-two-cols border-top pt-15 mt-15">
+                        <div class="form-group">
+                            <label for="bmr-annexure-attach">Attach Annexure Template (Optional)</label>
+                            <select id="bmr-annexure-attach" class="form-input"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="bmr-workflow-attach">Apply Workflow Configuration Route</label>
+                            <select id="bmr-workflow-attach" class="form-input" required></select>
+                        </div>
+                    </div>
+                    
+                    <div class="steps-builder-section border-top pt-20 mt-20">
+                        <div class="panel-header-actions mb-10">
+                            <h4>Manufacturing & Quality Steps Configuration</h4>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-template-step">
+                                <i class="fa-solid fa-plus"></i> Add Step
+                            </button>
+                        </div>
+                        <div class="steps-builder-list" id="template-steps-container"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top pt-15">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 8. INITIATE BATCH MODAL -->
+    <div class="modal" id="modal-create-batch">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Initiate Production Batch</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-create-batch">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="batch-num">Batch Number (Unique Identifier)</label>
+                        <input type="text" id="batch-num" class="form-input" placeholder="e.g. B260621-01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-product">Product Selection</label>
+                        <select id="batch-product" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-template">Select Approved BMR Template</label>
+                        <select id="batch-template" class="form-input" required>
+                            <option value="">-- Choose Product First --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-size-override">Specific Batch Size</label>
+                        <input type="text" id="batch-size-override" class="form-input" placeholder="Auto-fills from product details" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Initiate & Open Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. MANUAL AREA E-LOGBOOK MODAL -->
+    <div class="modal" id="modal-manual-area-log">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Record Manual Cleanliness / e-Log Entry</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-manual-area-log">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="man-area-select">Select Manufacturing Area</label>
+                        <select id="man-area-select" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="man-area-activity">Activity Details</label>
+                        <input type="text" id="man-area-activity" class="form-input" placeholder="e.g. Line clearance and clean suite vacuuming" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="man-area-status">Post-Activity Area State</label>
+                        <select id="man-area-status" class="form-input" required>
+                            <option value="Clean">Clean / Cleared</option>
+                            <option value="Dirty">Dirty / Processing</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Sign and Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 11. MANUAL EQUIPMENT E-LOGBOOK MODAL -->
+    <div class="modal" id="modal-manual-equipment-log">
+        <div class="modal-content modal-md">
+            <div class="modal-header">
+                <h3>Record Manual Asset State / e-Log Entry</h3>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-manual-equipment-log">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="man-equip-select">Select Equipment Asset</label>
+                        <select id="man-equip-select" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="man-equip-activity">Activity Description</label>
+                        <input type="text" id="man-equip-activity" class="form-input" placeholder="e.g. Clean in place (CIP) washdown cycle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="man-equip-status">Post-Activity Asset State</label>
+                        <select id="man-equip-status" class="form-input" required>
+                            <option value="Active">Available / Clean</option>
+                            <option value="Dirty">Requires Cleaning</option>
+                            <option value="Maintenance">Under Preventive Maintenance</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Sign and Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIDEBAR OVERLAY (mobile drawer backdrop) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toast-notifications"></div>
+
+    <!-- APPLICATION SCRIPTS (ES6 Modules) -->
+    <script type="module" src="js/state.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/masters.js"></script>
+    <script type="module" src="js/production.js"></script>
+    <script type="module" src="js/audit.js"></script>
+    
+    <!-- Main init launcher -->
+    <script type="module">
+        import { initApplication } from './js/ui.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            initApplication();
+        });
+    </script>
+</body>
+</html>
