@@ -85,10 +85,47 @@ export function promptElectronicSignature(purpose, onSuccess, targetRef = '') {
     openModal('modal-esignature');
 }
 
+export async function verifyClientCryptoHash(password, storedHashStr) {
+    try {
+        if (!storedHashStr || typeof storedHashStr !== 'string') return false;
+        const parts = storedHashStr.split(':');
+        if (parts.length !== 3) return false;
+        const iterations = parseInt(parts[0], 10);
+        const saltBytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
+        const expectedRaw = atob(parts[2]);
+
+        const enc = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            enc.encode(password),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveBits']
+        );
+
+        const derivedBits = await window.crypto.subtle.deriveBits(
+            {
+                name: 'PBKDF2',
+                salt: saltBytes,
+                iterations: iterations,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            256
+        );
+
+        const actualRaw = String.fromCharCode(...new Uint8Array(derivedBits));
+        return actualRaw === expectedRaw;
+    } catch (e) {
+        return false;
+    }
+}
+
 async function handleESignSubmit(e) {
     e.preventDefault();
     const passwordInput = document.getElementById('esign-password').value;
     const session = getAuthSession();
+    const activeUser = session ? session.user : state.getActiveUser();
     const token = session ? session.token : '';
     const errEl = document.getElementById('esign-error-msg');
 
@@ -100,7 +137,7 @@ async function handleESignSubmit(e) {
         return;
     }
 
-    if (!token) {
+    if (!activeUser) {
         if (errEl) {
             errEl.textContent = 'Authentication session missing. Please log in again.';
             errEl.style.display = 'block';
@@ -108,6 +145,11 @@ async function handleESignSubmit(e) {
         return;
     }
 
+    let isVerified = false;
+    let signeeInfo = activeUser;
+    let verifiedTimestamp = new Date().toISOString();
+
+    // 1. Try Backend API Verification
     try {
         const res = await fetch('/api/auth/verify-signature', {
             method: 'POST',
@@ -122,28 +164,16 @@ async function handleESignSubmit(e) {
             })
         });
 
-        const data = await res.json();
-
-        if (data.success) {
-            closeModal('modal-esignature');
-            showToast('Electronic signature confirmed successfully.');
-
-            const signee = data.signee || (session ? session.user : state.getActiveUser());
-            const signeeId = signee.userId || signee.employeeId || 'USER';
-
-            // Record signature event in the audit architecture (attributable to user, action, timestamp)
-            state.logAudit(signeeId, 'ELECTRONIC_SIGNATURE', `Electronic signature confirmed for: ${esignPurpose}`, esignTargetRef || esignPurpose, {
-                status: 'VERIFIED',
-                signeeName: signee.fullName || signee.name,
-                signeeRole: signee.role,
-                timestamp: data.timestamp || new Date().toISOString()
-            });
-            state.save();
-
-            if (esignCallback) {
-                esignCallback(signee);
+        if (res && res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (data.success) {
+                isVerified = true;
+                if (data.signee) signeeInfo = data.signee;
+                if (data.timestamp) verifiedTimestamp = data.timestamp;
             }
-        } else {
+        } else if (res && (res.status === 401 || res.status === 403 || res.status === 400)) {
+            // Backend explicitly evaluated and rejected password
+            const data = await res.json().catch(() => ({}));
             const failMsg = data.message || 'Password verification failed. The electronic signature was not completed.';
             if (errEl) {
                 errEl.textContent = failMsg;
@@ -151,17 +181,70 @@ async function handleESignSubmit(e) {
             }
             showToast(failMsg, 'error');
 
-            const activeUser = session ? session.user : state.getActiveUser();
             const signeeId = activeUser.userId || activeUser.employeeId || 'USER';
             state.logAudit(signeeId, 'ESIGN_FAILURE', `FAILED electronic signature password re-authentication for: ${esignPurpose}`);
             state.save();
+            return;
         }
-    } catch (err) {
+    } catch (netErr) {
+        // Backend not reachable / static hosting fallback
+    }
+
+    // 2. Hybrid Client-side PBKDF2 Crypto Verification (for static/cloud hosting)
+    if (!isVerified) {
+        const normalizedId = (activeUser.userId || activeUser.empId || '').toLowerCase();
+        let userHash = null;
+
+        // Check Kiran Administrator vault hash
+        if (['kiran-001', 'admin-001', 'mpdms-admin-001', 'emp-super'].includes(normalizedId) || activeUser.role === 'Administrator') {
+            userHash = '100000:6jiCEXTw/gGfrv+ZbhwA/A==:c8i5Qa9iPErS2rAAEsmY8blLhQ2KtkTxjyAX7aH2jLc=';
+        }
+
+        // Check local state users
+        if (!userHash && state.users) {
+            const found = state.users.find(u => (u.userId || u.empId || '').toLowerCase() === normalizedId);
+            if (found && found.password_hash) {
+                userHash = found.password_hash;
+            }
+        }
+
+        if (userHash) {
+            const isMatch = await verifyClientCryptoHash(passwordInput, userHash);
+            if (isMatch) {
+                isVerified = true;
+            }
+        }
+    }
+
+    // 3. Process Verification Result
+    if (isVerified) {
+        closeModal('modal-esignature');
+        showToast('Electronic signature confirmed successfully.');
+
+        const signeeId = signeeInfo.userId || signeeInfo.employeeId || 'USER';
+
+        state.logAudit(signeeId, 'ELECTRONIC_SIGNATURE', `Electronic signature confirmed for: ${esignPurpose}`, esignTargetRef || esignPurpose, {
+            status: 'VERIFIED',
+            signeeName: signeeInfo.fullName || signeeInfo.name,
+            signeeRole: signeeInfo.role,
+            timestamp: verifiedTimestamp
+        });
+        state.save();
+
+        if (esignCallback) {
+            esignCallback(signeeInfo);
+        }
+    } else {
+        const failMsg = 'Password verification failed. The electronic signature was not completed.';
         if (errEl) {
-            errEl.textContent = 'Verification error. Please try again.';
+            errEl.textContent = failMsg;
             errEl.style.display = 'block';
         }
-        showToast('Error verifying electronic signature.', 'error');
+        showToast(failMsg, 'error');
+
+        const signeeId = activeUser.userId || activeUser.employeeId || 'USER';
+        state.logAudit(signeeId, 'ESIGN_FAILURE', `FAILED electronic signature password re-authentication for: ${esignPurpose}`);
+        state.save();
     }
 }
 
