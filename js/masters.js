@@ -52,8 +52,32 @@ function renderUsers() {
 
     tenantUsers.forEach(user => {
         const tr = document.createElement('tr');
-        const privileges = user.privileges || (user.role === 'Administrator' ? ['Masters', 'Execution'] : ['Execution']);
-        const accessText = privileges.join(', ');
+        let accessText = 'None';
+        if (user.role === 'Administrator' || user.userId === 'Kiran-001' || user.empId === 'EMP-SUPER') {
+            accessText = 'Full Administrator Access';
+        } else if (typeof user.privileges === 'object' && user.privileges !== null && !Array.isArray(user.privileges)) {
+            const parts = [];
+            if (user.privileges.masters) {
+                for (const m in user.privileges.masters) {
+                    if (user.privileges.masters[m] && user.privileges.masters[m].length) {
+                        parts.push(`Masters: ${m} (${user.privileges.masters[m].join(', ')})`);
+                    }
+                }
+            }
+            if (user.privileges.execution) {
+                for (const m in user.privileges.execution) {
+                    if (user.privileges.execution[m] && user.privileges.execution[m].length) {
+                        parts.push(`Execution: ${m} (${user.privileges.execution[m].join(', ')})`);
+                    }
+                }
+            }
+            accessText = parts.length ? parts.join(' | ') : 'Execution (Default)';
+        } else if (Array.isArray(user.privileges)) {
+            accessText = user.privileges.join(', ');
+        } else if (typeof user.privileges === 'string') {
+            accessText = user.privileges;
+        }
+
         const isActive = user.active !== false && user.accountStatus !== 'Inactive';
         const userId = user.userId || user.empId;
         const userName = user.name || user.fullName;
@@ -88,10 +112,12 @@ function renderUsers() {
         if (document.getElementById('user-role')) document.getElementById('user-role').value = 'Employee';
         if (document.getElementById('user-status')) document.getElementById('user-status').value = 'Active';
         
-        document.querySelectorAll('input[name="user-privileges"]').forEach(cb => {
-            cb.checked = (cb.value === 'Execution');
-        });
-        
+        document.querySelectorAll('input[name^="priv-"]').forEach(cb => cb.checked = false);
+        const defaultEbmrView = document.querySelector('input[name="priv-execution-ebmr"][value="View"]');
+        const defaultEbmrExe = document.querySelector('input[name="priv-execution-ebmr"][value="Execute"]');
+        if (defaultEbmrView) defaultEbmrView.checked = true;
+        if (defaultEbmrExe) defaultEbmrExe.checked = true;
+
         populateDropdown('user-dept', state.getTenantDepartments().map(d => d.name));
         openModal('modal-user');
     };
@@ -161,8 +187,16 @@ document.getElementById('form-user').onsubmit = async (e) => {
     const confirmPassword = document.getElementById('user-confirm-password') ? document.getElementById('user-confirm-password').value : '';
     const role = document.getElementById('user-role') ? document.getElementById('user-role').value : 'Employee';
     const status = document.getElementById('user-status') ? document.getElementById('user-status').value : 'Active';
-    const dept = document.getElementById('user-dept') ? document.getElementById('user-dept').value : 'General';
-    const privileges = Array.from(document.querySelectorAll('input[name="user-privileges"]:checked')).map(cb => cb.value);
+    const privileges = {
+        masters: {
+            user_management: Array.from(document.querySelectorAll('input[name="priv-masters-user_management"]:checked')).map(cb => cb.value)
+        },
+        execution: {
+            ebmr: Array.from(document.querySelectorAll('input[name="priv-execution-ebmr"]:checked')).map(cb => cb.value),
+            elogbook: Array.from(document.querySelectorAll('input[name="priv-execution-elogbook"]:checked')).map(cb => cb.value),
+            reports: Array.from(document.querySelectorAll('input[name="priv-execution-reports"]:checked')).map(cb => cb.value)
+        }
+    };
 
     if (!userId || !fullName) {
         showToast('User ID and Full Name are required.', 'error');
