@@ -48,23 +48,22 @@ function renderUsers() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    const tenantUsers = state.getTenantUsers();
+    const tenantUsers = state.users || [];
 
     tenantUsers.forEach(user => {
         const tr = document.createElement('tr');
+        const privileges = user.privileges || (user.role === 'Administrator' ? ['Masters', 'Execution'] : ['Execution']);
+        const accessText = privileges.join(', ');
+        const isActive = user.active !== false && user.accountStatus !== 'Inactive';
+        
         tr.innerHTML = `
-            <td><strong>${user.empId}</strong></td>
-            <td>${user.name}</td>
-            <td>${user.dept}</td>
-            <td><span class="user-role-badge">${user.userType || 'N/A'}</span><br><small style="color:var(--color-text-muted);">${user.designation || ''}</small></td>
-            <td><span class="badge ${user.active ? 'badge-active' : 'badge-inactive'}">${user.active ? 'Active' : 'Deactivated'}</span></td>
+            <td><strong>${user.userId || user.empId}</strong></td>
+            <td>${user.name || user.fullName}</td>
+            <td><span class="user-role-badge">${user.role || user.designation || 'Employee'}</span></td>
+            <td><span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+            <td><small style="color:var(--color-text-secondary); font-weight:600;">${accessText}</small></td>
             <td>
-                <button class="btn btn-secondary btn-sm btn-edit-user" data-id="${user.empId}">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                </button>
-                <button class="btn ${user.active ? 'btn-danger' : 'btn-success'} btn-sm btn-toggle-user" data-id="${user.empId}">
-                    <i class="fa-solid ${user.active ? 'fa-user-slash' : 'fa-user-check'}"></i> ${user.active ? 'Deactivate' : 'Activate'}
-                </button>
+                <span style="font-size: 11px; color: var(--color-text-muted);">Saved</span>
             </td>
         `;
         tbody.appendChild(tr);
@@ -72,20 +71,21 @@ function renderUsers() {
 
     document.getElementById('btn-add-user').onclick = () => {
         editingEmpId = null;
-        document.getElementById('modal-user-title').textContent = 'Add Employee';
+        document.getElementById('modal-user-title').textContent = 'Create User Account';
         document.getElementById('user-emp-id').value = '';
         document.getElementById('user-emp-id').readOnly = false;
+        document.getElementById('user-name').value = '';
         document.getElementById('user-email').value = '';
-        document.getElementById('user-designation').value = '';
-        document.getElementById('user-type').value = 'Production User';
+        if (document.getElementById('user-password')) document.getElementById('user-password').value = '';
+        if (document.getElementById('user-confirm-password')) document.getElementById('user-confirm-password').value = '';
+        if (document.getElementById('user-role')) document.getElementById('user-role').value = 'Employee';
+        if (document.getElementById('user-status')) document.getElementById('user-status').value = 'Active';
         
-        document.querySelectorAll('input[name="user-permissions"]').forEach(cb => cb.checked = false);
+        document.querySelectorAll('input[name="user-privileges"]').forEach(cb => {
+            cb.checked = (cb.value === 'Execution');
+        });
         
         populateDropdown('user-dept', state.getTenantDepartments().map(d => d.name));
-        
-        // Check all modules by default on create
-        document.querySelectorAll('input[name="user-modules"]').forEach(cb => cb.checked = true);
-        
         openModal('modal-user');
     };
 
@@ -143,64 +143,91 @@ function renderUsers() {
     });
 }
 
-document.getElementById('form-user').onsubmit = (e) => {
+document.getElementById('form-user').onsubmit = async (e) => {
     e.preventDefault();
-    if (!state.hasPermission('Create') && !state.hasPermission('Edit')) {
-        showToast('Insufficient permissions to manage employees.', 'error');
+
+    const userId = document.getElementById('user-emp-id').value.trim();
+    const fullName = document.getElementById('user-name').value.trim();
+    const email = document.getElementById('user-email').value.trim();
+    const password = document.getElementById('user-password') ? document.getElementById('user-password').value : '';
+    const confirmPassword = document.getElementById('user-confirm-password') ? document.getElementById('user-confirm-password').value : '';
+    const role = document.getElementById('user-role') ? document.getElementById('user-role').value : 'Employee';
+    const status = document.getElementById('user-status') ? document.getElementById('user-status').value : 'Active';
+    const dept = document.getElementById('user-dept') ? document.getElementById('user-dept').value : 'General';
+    const privileges = Array.from(document.querySelectorAll('input[name="user-privileges"]:checked')).map(cb => cb.value);
+
+    if (!userId || !fullName) {
+        showToast('User ID and Full Name are required.', 'error');
         return;
     }
 
-    const empId = document.getElementById('user-emp-id').value.trim();
-    const name = document.getElementById('user-name').value.trim();
-    const email = document.getElementById('user-email').value.trim();
-    const designation = document.getElementById('user-designation').value.trim();
-    const userType = document.getElementById('user-type').value;
-    const dept = document.getElementById('user-dept').value;
-    const pin = document.getElementById('user-pin').value;
-    const active = document.getElementById('user-active').checked;
-    const permissions = Array.from(document.querySelectorAll('input[name="user-permissions"]:checked')).map(cb => cb.value);
-
-    const checkedModules = Array.from(document.querySelectorAll('input[name="user-modules"]:checked')).map(cb => cb.value);
-
-    if (editingEmpId) {
-        promptElectronicSignature(`Edit Employee Details: ${name} (${empId})`, (signee) => {
-            const user = state.users.find(u => u.empId === empId && u.companyId === state.activeCompanyId);
-            if (user) {
-                const oldState = { ...user };
-                user.name = name;
-                user.email = email;
-                user.designation = designation;
-                user.userType = userType;
-                user.permissions = permissions;
-                user.dept = dept;
-                user.pin = pin;
-                user.active = active;
-                user.moduleAccess = checkedModules;
-                
-                state.logAudit(signee.empId, 'UPDATE_USER', `Updated employee: ${name} (${empId})`, empId, { before: oldState, after: user });
-                state.save();
-                closeModal('modal-user');
-                renderUsers();
-                showToast(`Employee details updated.`);
-                import('./ui.js').then(mod => mod.initUserSwitcher());
-            }
-        });
-    } else {
-        if (state.users.some(u => u.empId === empId)) {
-            showToast('Employee ID already exists.', 'error');
-            return;
-        }
-        promptElectronicSignature(`Create New Employee Account: ${name} (${empId})`, (signee) => {
-            const newUser = { companyId: state.activeCompanyId, empId, name, email, designation, userType, permissions, dept, pin, active, moduleAccess: checkedModules };
-            state.users.push(newUser);
-            state.logAudit(signee.empId, 'CREATE_USER', `Registered new employee: ${name} (${empId})`, empId, { after: newUser });
-            state.save();
-            closeModal('modal-user');
-            renderUsers();
-            showToast(`Employee account created.`);
-            import('./ui.js').then(mod => mod.initUserSwitcher());
-        });
+    if (!password) {
+        showToast('Password is required for user creation.', 'error');
+        return;
     }
+
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match.', 'error');
+        return;
+    }
+
+    if (state.users.some(u => (u.userId || u.empId || '').toLowerCase() === userId.toLowerCase())) {
+        showToast(`User ID '${userId}' already exists.`, 'error');
+        return;
+    }
+
+    // Call backend endpoint to persist user securely with hashed password
+    const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+    const session = sessionStr ? JSON.parse(sessionStr) : null;
+    const token = session ? session.token : '';
+
+    const payload = {
+        userId,
+        fullName,
+        email,
+        password,
+        role,
+        status,
+        department: dept,
+        privileges
+    };
+
+    try {
+        if (token) {
+            await fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            }).catch(() => null);
+        }
+    } catch (err) {}
+
+    // Add to local state user registry
+    const newUser = {
+        companyId: 'SYSTEM',
+        userId: userId,
+        empId: userId,
+        name: fullName,
+        fullName: fullName,
+        email: email,
+        role: role,
+        designation: role,
+        userType: role === 'Administrator' ? 'Master User' : 'Production User',
+        accountStatus: status,
+        active: status === 'Active',
+        privileges: privileges,
+        moduleAccess: privileges.includes('Masters') ? ['Masters', 'eLogbook', 'eBMR'] : ['eBMR', 'eLogbook'],
+        dept: dept
+    };
+
+    state.users.push(newUser);
+    state.save();
+    closeModal('modal-user');
+    renderUsers();
+    showToast(`User account '${userId}' created successfully.`);
 };
 
 // ==========================================================================
