@@ -11,6 +11,31 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <!-- Immediate Authentication Guard (Zero-Flash Protection) -->
+    <script>
+        (function() {
+            try {
+                const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+                if (!sessionStr) {
+                    const target = window.location.hash || '';
+                    const redirectUrl = target ? 'login.html?redirect=' + encodeURIComponent(target) : 'login.html';
+                    window.location.replace(redirectUrl);
+                    return;
+                }
+                const session = JSON.parse(sessionStr);
+                const maxAge = 8 * 60 * 60 * 1000; // 8 hours
+                const loginTime = session && session.loginTimestamp ? new Date(session.loginTimestamp).getTime() : 0;
+                if (!session || !session.token || (Date.now() - loginTime > maxAge)) {
+                    sessionStorage.removeItem('mpdms_auth_session');
+                    window.location.replace('login.html?reason=expired');
+                    return;
+                }
+            } catch(e) {
+                sessionStorage.removeItem('mpdms_auth_session');
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
 </head>
 <body class="theme-dark">
     <div class="app-container">
@@ -142,6 +167,9 @@
                         <select id="demo-user-selector" class="user-selector-dropdown" style="max-width: 180px;">
                             <!-- Populated dynamically based on selected company -->
                         </select>
+                        <button class="btn btn-secondary btn-sm ml-10" id="btn-header-logout" title="Sign Out of MPDMS" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; color: var(--color-red); border-color: hsla(355, 78%, 56%, 0.3); font-weight: 600; cursor: pointer;">
+                            <i class="fa-solid fa-right-from-bracket"></i> <span>Sign Out</span>
+                        </button>
                     </div>
                 </div>
             </header>
