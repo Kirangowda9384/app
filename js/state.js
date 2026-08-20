@@ -23,7 +23,7 @@ const DEFAULT_DEPARTMENTS = [
 
 const DEFAULT_USERS = [
     // Super Admin (Global Vendor Account)
-    { companyId: 'SYSTEM', empId: 'EMP-SUPER', name: 'MycoHaven Super Admin', designation: 'Super Administrator', email: 'admin@mycohaven.com', userType: 'Master User', dept: 'Vendor Operations', pin: '0000', active: true, moduleAccess: ['Masters', 'eLogbook', 'eBMR', 'ELN', 'LIMS', 'QMS', 'Reports'], permissions: ['View', 'Create', 'Edit', 'Submit', 'Review', 'Approve'] },
+    { companyId: 'SYSTEM', userId: 'Kiran-001', empId: 'EMP-SUPER', name: 'MycoHaven Super Admin', designation: 'Super Administrator', email: 'admin@mycohaven.com', userType: 'Master User', dept: 'Vendor Operations', pin: '0000', active: true, moduleAccess: ['Masters', 'eLogbook', 'eBMR', 'ELN', 'LIMS', 'QMS', 'Reports'], permissions: ['View', 'Create', 'Edit', 'Submit', 'Review', 'Approve'] },
     
     // Aura Pharmaceuticals
     { companyId: 'AURA', empId: 'EMP-AURA-01', name: 'Dr. Sarah Connor', designation: 'QA Admin', email: 's.connor@aura.com', userType: 'Master User', dept: 'QA', pin: '1111', active: true, moduleAccess: ['Masters', 'eLogbook', 'eBMR', 'ELN', 'LIMS', 'QMS', 'Reports'], permissions: ['View', 'Create', 'Edit', 'Submit', 'Review', 'Approve'] },
