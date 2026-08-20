@@ -226,10 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 sessionStorage.setItem('mpdms_auth_session', JSON.stringify(sessionData));
 
-                // Determine redirect target
+                // Determine redirect target based on privileges
                 let targetRoute = redirectParam;
                 if (!targetRoute) {
-                    targetRoute = '#dashboard';
+                    const userRole = authenticatedUser ? authenticatedUser.role : '';
+                    const userPrivs = authenticatedUser ? (authenticatedUser.privileges || []) : [];
+                    const hasMasters = userRole === 'Administrator' || userPrivs.includes('Masters');
+                    targetRoute = hasMasters ? '#dashboard' : '#execution';
                 }
 
                 if (!targetRoute.startsWith('#')) {
