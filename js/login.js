@@ -8,10 +8,10 @@ const AUTH_VAULT = {
     users: [
         {
             userIds: ['kiran-001', 'admin-001', 'mpdms-admin-001', 'emp-super'],
-            fullName: 'MycoHaven Super Admin',
-            role: 'Super Administrator',
+            fullName: 'Kiran Kumar',
+            role: 'Administrator',
             department: 'System Administration',
-            designation: 'Super Administrator',
+            designation: 'Administrator',
             employeeId: 'EMP-SUPER',
             email: 'admin@mycohaven.com',
             accountStatus: 'Active',
