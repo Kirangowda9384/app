@@ -141,6 +141,34 @@ export function handleLogout() {
 }
 
 // Single Page Application Panel Routing
+export function hasUserPrivilege(sessionUser, domain, module, action) {
+    if (!sessionUser) return false;
+    if (sessionUser.role === 'Administrator' || sessionUser.userId === 'Kiran-001' || sessionUser.employeeId === 'EMP-SUPER') {
+        return true;
+    }
+    const privs = sessionUser.privileges;
+    if (!privs) return false;
+
+    if (typeof privs === 'object' && !Array.isArray(privs)) {
+        if (privs[domain] && privs[domain][module]) {
+            const list = privs[domain][module];
+            if (!action) return list.length > 0;
+            return list.includes(action);
+        }
+    }
+
+    if (Array.isArray(privs) || typeof privs === 'string') {
+        const arr = Array.isArray(privs) ? privs : [privs];
+        if (domain === 'execution' && arr.includes('Execution')) {
+            if (!action || action === 'View' || action === 'Execute') return true;
+        }
+        if (domain === 'masters' && arr.includes('Masters')) {
+            if (!action || action === 'View') return true;
+        }
+    }
+    return false;
+}
+
 function handlePanelRouting() {
     const session = requireAuth();
     if (!session) return;
@@ -158,10 +186,8 @@ function handlePanelRouting() {
     const defaultRoute = '#dashboard';
     const hash = window.location.hash || defaultRoute;
     const cleanHash = hash.replace('#', '');
-    
-    const userRole = session.user ? session.user.role : '';
-    const userPrivileges = session.user ? (session.user.privileges || []) : [];
-    const hasMastersAccess = isSuperUser || userRole === 'Administrator' || userPrivileges.includes('Masters');
+
+    const hasMastersAccess = hasUserPrivilege(session.user, 'masters', 'user_management', 'View');
 
     // Guard Super Admin Console against unauthorized roles
     if (cleanHash === 'super-admin-console' && !isSuperUser) {
@@ -462,8 +488,7 @@ function updateUISidebarVisibility() {
     
     const footerBadge = document.getElementById('sidebar-tenant-badge');
     
-    const userPrivileges = activeUser.privileges || (activeUser.role === 'Administrator' ? ['Masters', 'Execution'] : ['Execution']);
-    const hasMastersAccess = isSuperAdmin || activeUser.role === 'Administrator' || userPrivileges.includes('Masters');
+    const hasMastersAccess = hasUserPrivilege(activeUser, 'masters', 'user_management', 'View');
 
     const mastersCard = document.querySelector('a[href="#masters"]');
     if (mastersCard) {
