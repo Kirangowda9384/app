@@ -55,15 +55,22 @@ function renderUsers() {
         const privileges = user.privileges || (user.role === 'Administrator' ? ['Masters', 'Execution'] : ['Execution']);
         const accessText = privileges.join(', ');
         const isActive = user.active !== false && user.accountStatus !== 'Inactive';
+        const userId = user.userId || user.empId;
+        const userName = user.name || user.fullName;
         
         tr.innerHTML = `
-            <td><strong>${user.userId || user.empId}</strong></td>
-            <td>${user.name || user.fullName}</td>
+            <td><strong>${userId}</strong></td>
+            <td>${userName}</td>
             <td><span class="user-role-badge">${user.role || user.designation || 'Employee'}</span></td>
             <td><span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
             <td><small style="color:var(--color-text-secondary); font-weight:600;">${accessText}</small></td>
             <td>
-                <span style="font-size: 11px; color: var(--color-text-muted);">Saved</span>
+                <button class="btn ${isActive ? 'btn-danger' : 'btn-success'} btn-sm btn-toggle-status" data-id="${userId}" data-status="${isActive ? 'Inactive' : 'Active'}">
+                    <i class="fa-solid ${isActive ? 'fa-user-slash' : 'fa-user-check'}"></i> ${isActive ? 'Deactivate' : 'Activate'}
+                </button>
+                <button class="btn btn-secondary btn-sm btn-reset-password" data-id="${userId}" data-name="${userName}" style="margin-left: 4px;">
+                    <i class="fa-solid fa-key"></i> Reset Password
+                </button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -89,56 +96,57 @@ function renderUsers() {
         openModal('modal-user');
     };
 
-    tbody.querySelectorAll('.btn-edit-user').forEach(btn => {
-        btn.onclick = () => {
-            const empId = btn.getAttribute('data-id');
-            const user = state.users.find(u => u.empId === empId && u.companyId === state.activeCompanyId);
+    // Attach Status Toggle Listeners (Activate / Deactivate)
+    tbody.querySelectorAll('.btn-toggle-status').forEach(btn => {
+        btn.onclick = async () => {
+            const userId = btn.getAttribute('data-id');
+            const targetStatus = btn.getAttribute('data-status');
+
+            const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+            const session = sessionStr ? JSON.parse(sessionStr) : null;
+            const token = session ? session.token : '';
+
+            try {
+                if (token) {
+                    const res = await fetch('/api/users/status', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ userId, status: targetStatus })
+                    });
+                    const data = await res.json();
+                    if (!data.success) {
+                        showToast(data.message || 'Failed to update user status.', 'error');
+                        return;
+                    }
+                }
+            } catch (err) {}
+
+            const user = state.users.find(u => (u.userId || u.empId) === userId);
             if (user) {
-                editingEmpId = empId;
-                document.getElementById('modal-user-title').textContent = 'Edit Employee';
-                document.getElementById('user-emp-id').value = user.empId;
-                document.getElementById('user-emp-id').readOnly = true;
-                document.getElementById('user-name').value = user.name;
-                document.getElementById('user-email').value = user.email || '';
-                document.getElementById('user-designation').value = user.designation || '';
-                document.getElementById('user-type').value = user.userType || 'Production User';
-                document.getElementById('user-pin').value = user.pin;
-                document.getElementById('user-active').checked = user.active;
-                
-                const userPermissions = user.permissions || [];
-                document.querySelectorAll('input[name="user-permissions"]').forEach(cb => {
-                    cb.checked = userPermissions.includes(cb.value);
-                });
-                
-                populateDropdown('user-dept', state.getTenantDepartments().map(d => d.name), user.dept);
-                
-                // Prefill modules selection
-                const userModules = user.moduleAccess || [];
-                document.querySelectorAll('input[name="user-modules"]').forEach(cb => {
-                    cb.checked = userModules.includes(cb.value);
-                });
-                
-                openModal('modal-user');
+                user.accountStatus = targetStatus;
+                user.active = (targetStatus === 'Active');
+                state.save();
             }
+
+            renderUsers();
+            showToast(`Account status for user '${userId}' updated to ${targetStatus}.`);
         };
     });
 
-    tbody.querySelectorAll('.btn-toggle-user').forEach(btn => {
+    // Attach Reset Password Listeners (Administrator)
+    tbody.querySelectorAll('.btn-reset-password').forEach(btn => {
         btn.onclick = () => {
-            const empId = btn.getAttribute('data-id');
-            const user = state.users.find(u => u.empId === empId && u.companyId === state.activeCompanyId);
-            if (user) {
-                const actionText = user.active ? 'Deactivate Employee Account' : 'Activate Employee Account';
-                promptElectronicSignature(`${actionText} (${user.name})`, (signee) => {
-                    const oldState = { active: user.active };
-                    user.active = !user.active;
-                    state.logAudit(signee.empId, 'UPDATE_USER_STATUS', `${actionText}: ${user.name} (${user.empId})`, user.empId, { before: oldState, after: { active: user.active } });
-                    state.save();
-                    renderUsers();
-                    showToast(`Employee ${user.name} status updated.`);
-                    import('./ui.js').then(mod => mod.initUserSwitcher());
-                });
-            }
+            const userId = btn.getAttribute('data-id');
+            const userName = btn.getAttribute('data-name');
+
+            document.getElementById('reset-pass-user-id').value = userId;
+            document.getElementById('reset-pass-user-display').value = `${userName} (${userId})`;
+            document.getElementById('reset-pass-new').value = '';
+            document.getElementById('reset-pass-confirm').value = '';
+            openModal('modal-reset-password');
         };
     });
 }
@@ -1169,4 +1177,108 @@ function populateDropdown(selectId, items, selectedValue = null) {
         }
         select.appendChild(opt);
     });
+}
+
+// ==========================================================================
+// STEP 3D: PASSWORD MANAGEMENT EVENT LISTENERS
+// ==========================================================================
+
+// Administrator Reset Password Submit Handler
+const formResetPass = document.getElementById('form-reset-password');
+if (formResetPass) {
+    formResetPass.onsubmit = async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('reset-pass-user-id').value;
+        const newPassword = document.getElementById('reset-pass-new').value;
+        const confirmPassword = document.getElementById('reset-pass-confirm').value;
+
+        if (!newPassword) {
+            showToast('Please enter a new password.', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('Passwords do not match.', 'error');
+            return;
+        }
+
+        const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+        const session = sessionStr ? JSON.parse(sessionStr) : null;
+        const token = session ? session.token : '';
+
+        try {
+            const res = await fetch('/api/users/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ userId, newPassword, confirmPassword })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.message || 'Failed to reset password.', 'error');
+                return;
+            }
+            closeModal('modal-reset-password');
+            showToast(`Password for user '${userId}' reset successfully.`);
+        } catch (err) {
+            showToast('Error resetting user password.', 'error');
+        }
+    };
+}
+
+// Employee Self-Service Change Password Button Listener & Handler
+const btnHeaderChangePass = document.getElementById('btn-header-change-password');
+if (btnHeaderChangePass) {
+    btnHeaderChangePass.onclick = () => {
+        document.getElementById('change-pass-current').value = '';
+        document.getElementById('change-pass-new').value = '';
+        document.getElementById('change-pass-confirm').value = '';
+        openModal('modal-change-password');
+    };
+}
+
+const formChangePass = document.getElementById('form-change-password');
+if (formChangePass) {
+    formChangePass.onsubmit = async (e) => {
+        e.preventDefault();
+        const currentPassword = document.getElementById('change-pass-current').value;
+        const newPassword = document.getElementById('change-pass-new').value;
+        const confirmPassword = document.getElementById('change-pass-confirm').value;
+
+        if (!currentPassword || !newPassword) {
+            showToast('All password fields are required.', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('New passwords do not match.', 'error');
+            return;
+        }
+
+        const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+        const session = sessionStr ? JSON.parse(sessionStr) : null;
+        const token = session ? session.token : '';
+
+        try {
+            const res = await fetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.message || 'Failed to change password.', 'error');
+                return;
+            }
+            closeModal('modal-change-password');
+            showToast('Your password has been changed successfully.');
+        } catch (err) {
+            showToast('Error changing password.', 'error');
+        }
+    };
 }
