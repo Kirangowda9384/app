@@ -153,7 +153,7 @@ function handlePanelRouting() {
         session.user.userId === 'MPDMS-ADMIN-001'
     );
 
-    const defaultRoute = isSuperUser ? '#super-admin-console' : '#dashboard';
+    const defaultRoute = '#dashboard';
     const hash = window.location.hash || defaultRoute;
     const cleanHash = hash.replace('#', '');
     
@@ -191,7 +191,9 @@ function updateHeaderTitle(route) {
     
     const routeInfo = {
         'super-admin-console': { title: 'Super Admin Vendor Console', sub: 'Manage customer company tenants, modules, and licenses' },
-        'dashboard': { title: 'Dashboard Overview', sub: 'Real-time batch status and compliance monitoring' },
+        'dashboard': { title: 'Dashboard Overview', sub: 'Primary MPDMS domain navigation grid' },
+        'masters': { title: 'Masters Domain', sub: 'Enterprise master data, templates, and setup directory' },
+        'execution': { title: 'Execution Domain', sub: 'Digital floor executions and operational process logs' },
         'user-master': { title: 'Employee Configuration', sub: 'Manage corporate employees and credentials' },
         'user-group-master': { title: 'User Group Configuration', sub: 'Roles, authorization policies, and access control' },
         'department-master': { title: 'Departments Directory', sub: 'Configure and monitor corporate organizational groups' },
@@ -220,6 +222,9 @@ export function triggerPanelRender(route) {
             break;
         case 'dashboard':
             renderDashboard();
+            break;
+        case 'masters':
+        case 'execution':
             break;
         case 'user-master':
         case 'user-group-master':
