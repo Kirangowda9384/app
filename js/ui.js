@@ -94,11 +94,76 @@ function handleESignSubmit(e) {
     }
 }
 
+// Authentication & Session Guard
+export function getAuthSession() {
+    try {
+        const sessionStr = sessionStorage.getItem('mpdms_auth_session');
+        if (!sessionStr) return null;
+        const session = JSON.parse(sessionStr);
+        const maxAge = 8 * 60 * 60 * 1000; // 8 hours
+        const loginTime = session && session.loginTimestamp ? new Date(session.loginTimestamp).getTime() : 0;
+        if (!session || !session.token || (Date.now() - loginTime > maxAge)) {
+            sessionStorage.removeItem('mpdms_auth_session');
+            return null;
+        }
+        return session;
+    } catch (e) {
+        sessionStorage.removeItem('mpdms_auth_session');
+        return null;
+    }
+}
+
+export function requireAuth() {
+    const session = getAuthSession();
+    if (!session) {
+        const currentHash = window.location.hash || '';
+        const redirectUrl = currentHash ? `login.html?redirect=${encodeURIComponent(currentHash)}` : 'login.html';
+        window.location.replace(redirectUrl);
+        return null;
+    }
+    return session;
+}
+
+export function handleLogout() {
+    const session = getAuthSession();
+    if (session && session.token) {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            }
+        }).catch(() => {});
+    }
+    sessionStorage.removeItem('mpdms_auth_session');
+    sessionStorage.removeItem('mpdms_redirect_target');
+    window.location.replace('login.html');
+}
+
 // Single Page Application Panel Routing
 function handlePanelRouting() {
-    const hash = window.location.hash || '#dashboard';
+    const session = requireAuth();
+    if (!session) return;
+    
+    const isSuperUser = session.user && (
+        session.user.role === 'Super Administrator' || 
+        session.user.role === 'Super Admin' ||
+        session.user.employeeId === 'EMP-SUPER' ||
+        session.user.userId === 'ADMIN-001' ||
+        session.user.userId === 'MPDMS-ADMIN-001'
+    );
+
+    const defaultRoute = isSuperUser ? '#super-admin-console' : '#dashboard';
+    const hash = window.location.hash || defaultRoute;
     const cleanHash = hash.replace('#', '');
     
+    // Guard Super Admin Console against unauthorized roles
+    if (cleanHash === 'super-admin-console' && !isSuperUser) {
+        showToast('Access Denied: Super Administrator privileges required.', 'error');
+        window.location.hash = '#dashboard';
+        return;
+    }
+
     document.querySelectorAll('.app-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     
@@ -116,7 +181,7 @@ function handlePanelRouting() {
         updateHeaderTitle(cleanHash);
         triggerPanelRender(cleanHash);
     } else {
-        window.location.hash = '#dashboard';
+        window.location.hash = defaultRoute;
     }
 }
 
@@ -533,13 +598,57 @@ function initModalCloseHandlers() {
 
 // Global Launcher Entry point
 export function initApplication() {
+    const session = requireAuth();
+    if (!session) return;
+
+    // Synchronize multi-tenant state with authenticated session
+    if (session.user) {
+        const isSuperUser = (
+            session.user.role === 'Super Administrator' ||
+            session.user.role === 'Super Admin' ||
+            session.user.employeeId === 'EMP-SUPER' ||
+            session.user.userId === 'ADMIN-001' ||
+            session.user.userId === 'MPDMS-ADMIN-001'
+        );
+        if (isSuperUser) {
+            state.activeCompanyId = 'SYSTEM';
+            state.activeUserEmpId = 'EMP-SUPER';
+        } else if (session.user.employeeId) {
+            state.activeUserEmpId = session.user.employeeId;
+        }
+    }
+
     initTimeDisplay();
     initUserSwitcher();
     initMobileToggle();
     initModalCloseHandlers();
     
+    // Wire up Logout buttons
+    const headerLogout = document.getElementById('btn-header-logout');
+    if (headerLogout) {
+        headerLogout.onclick = (e) => {
+            e.preventDefault();
+            handleLogout();
+        };
+    }
+    const sidebarLogout = document.getElementById('btn-sidebar-logout');
+    if (sidebarLogout) {
+        sidebarLogout.onclick = (e) => {
+            e.preventDefault();
+            handleLogout();
+        };
+    }
+
     document.getElementById('form-esignature').onsubmit = handleESignSubmit;
     
+    // Browser Back / bfcache Protection
+    window.addEventListener('pageshow', () => {
+        requireAuth();
+    });
+    window.addEventListener('popstate', () => {
+        requireAuth();
+    });
+
     window.addEventListener('hashchange', handlePanelRouting);
     handlePanelRouting();
 }
