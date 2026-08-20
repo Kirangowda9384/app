@@ -159,10 +159,21 @@ function handlePanelRouting() {
     const hash = window.location.hash || defaultRoute;
     const cleanHash = hash.replace('#', '');
     
+    const userRole = session.user ? session.user.role : '';
+    const userPrivileges = session.user ? (session.user.privileges || []) : [];
+    const hasMastersAccess = isSuperUser || userRole === 'Administrator' || userPrivileges.includes('Masters');
+
     // Guard Super Admin Console against unauthorized roles
     if (cleanHash === 'super-admin-console' && !isSuperUser) {
         showToast('Access Denied: Super Administrator privileges required.', 'error');
         window.location.hash = '#dashboard';
+        return;
+    }
+
+    // Guard Masters & User Management against non-authorized Employees
+    if ((cleanHash === 'user-master' || cleanHash === 'masters') && !hasMastersAccess) {
+        showToast('Access Denied: Masters domain access privileges required.', 'error');
+        window.location.hash = '#execution';
         return;
     }
 
@@ -451,20 +462,24 @@ function updateUISidebarVisibility() {
     
     const footerBadge = document.getElementById('sidebar-tenant-badge');
     
-    if (isSuperAdmin) {
-        // Show Vendor operations, hide pharma-tenant masters/production
+    const userPrivileges = activeUser.privileges || (activeUser.role === 'Administrator' ? ['Masters', 'Execution'] : ['Execution']);
+    const hasMastersAccess = isSuperAdmin || activeUser.role === 'Administrator' || userPrivileges.includes('Masters');
+
+    const mastersCard = document.querySelector('a[href="#masters"]');
+    if (mastersCard) {
+        mastersCard.style.display = hasMastersAccess ? 'flex' : 'none';
+    }
+
+    if (isSuperAdmin || activeUser.role === 'Administrator') {
+        // Administrator: Show Vendor operations, Super Admin Console, and Configuration
         if (superAdminLabel) superAdminLabel.style.display = 'block';
         if (superAdminLink) superAdminLink.style.display = 'flex';
         
-        document.querySelectorAll('.nav-item:not(#nav-super-admin-console):not(#nav-audit-trail):not(#nav-dashboard)').forEach(item => {
-            item.style.display = 'none';
-        });
-        document.querySelectorAll('.nav-section-label:not(#section-superadmin-label)').forEach(lbl => {
-            lbl.style.display = 'none';
-        });
+        document.querySelectorAll('.nav-item').forEach(item => item.style.display = 'flex');
+        document.querySelectorAll('.nav-section-label').forEach(lbl => lbl.style.display = 'block');
         
         if (footerBadge) {
-            footerBadge.textContent = 'Vendor System Console';
+            footerBadge.textContent = 'System Administrator';
             footerBadge.parentElement.style.backgroundColor = 'var(--color-blue-glow)';
             footerBadge.parentElement.style.color = 'var(--color-blue)';
             footerBadge.parentElement.style.borderColor = 'rgba(33, 150, 243, 0.2)';
