@@ -56,41 +56,112 @@ export function showToast(message, type = 'success') {
     }, 4000);
 }
 
-// 21 CFR Part 11 Electronic Signature Handler
+// 21 CFR Part 11 Electronic Signature Handler (Re-Authentication via Login Password)
 let esignCallback = null;
 let esignPurpose = '';
+let esignTargetRef = '';
 
-export function promptElectronicSignature(purpose, onSuccess) {
-    const activeUser = state.getActiveUser();
+export function promptElectronicSignature(purpose, onSuccess, targetRef = '') {
+    const session = getAuthSession();
+    const activeUser = (session && session.user) ? session.user : state.getActiveUser();
     
-    document.getElementById('esign-user-display').value = activeUser.name;
-    document.getElementById('esign-user-role').value = activeUser.role;
-    document.getElementById('esign-purpose').value = purpose;
-    document.getElementById('esign-pin').value = '';
-    
+    const userDisplay = activeUser.fullName || activeUser.name || activeUser.userId || 'User';
+    const userRole = activeUser.role || activeUser.designation || 'Employee';
+
+    const userDisplayInput = document.getElementById('esign-user-display');
+    const purposeInput = document.getElementById('esign-purpose');
+    const passInput = document.getElementById('esign-password');
+    const errEl = document.getElementById('esign-error-msg');
+
+    if (userDisplayInput) userDisplayInput.value = `${userDisplay} (${userRole})`;
+    if (purposeInput) purposeInput.value = purpose;
+    if (passInput) passInput.value = '';
+    if (errEl) errEl.style.display = 'none';
+
     esignCallback = onSuccess;
     esignPurpose = purpose;
-    
+    esignTargetRef = targetRef;
+
     openModal('modal-esignature');
 }
 
-function handleESignSubmit(e) {
+async function handleESignSubmit(e) {
     e.preventDefault();
-    const pinInput = document.getElementById('esign-pin').value;
-    const activeUser = state.getActiveUser();
-    
-    if (pinInput === activeUser.pin) {
-        closeModal('modal-esignature');
-        showToast('Electronic signature certified successfully.');
-        
-        state.logAudit(activeUser.empId, 'ESIGN_SUCCESS', `Electronic signature certified for: ${esignPurpose}`);
-        
-        if (esignCallback) {
-            esignCallback(activeUser);
+    const passwordInput = document.getElementById('esign-password').value;
+    const session = getAuthSession();
+    const token = session ? session.token : '';
+    const errEl = document.getElementById('esign-error-msg');
+
+    if (!passwordInput) {
+        if (errEl) {
+            errEl.textContent = 'Please enter your login password.';
+            errEl.style.display = 'block';
         }
-    } else {
-        state.logAudit(activeUser.empId, 'ESIGN_FAILURE', `FAILED electronic signature verification pin for: ${esignPurpose}`);
-        showToast('Invalid Security PIN. Access Denied.', 'error');
+        return;
+    }
+
+    if (!token) {
+        if (errEl) {
+            errEl.textContent = 'Authentication session missing. Please log in again.';
+            errEl.style.display = 'block';
+        }
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/auth/verify-signature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                password: passwordInput,
+                purpose: esignPurpose,
+                targetRef: esignTargetRef
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            closeModal('modal-esignature');
+            showToast('Electronic signature confirmed successfully.');
+
+            const signee = data.signee || (session ? session.user : state.getActiveUser());
+            const signeeId = signee.userId || signee.employeeId || 'USER';
+
+            // Record signature event in the audit architecture (attributable to user, action, timestamp)
+            state.logAudit(signeeId, 'ELECTRONIC_SIGNATURE', `Electronic signature confirmed for: ${esignPurpose}`, esignTargetRef || esignPurpose, {
+                status: 'VERIFIED',
+                signeeName: signee.fullName || signee.name,
+                signeeRole: signee.role,
+                timestamp: data.timestamp || new Date().toISOString()
+            });
+            state.save();
+
+            if (esignCallback) {
+                esignCallback(signee);
+            }
+        } else {
+            const failMsg = data.message || 'Password verification failed. The electronic signature was not completed.';
+            if (errEl) {
+                errEl.textContent = failMsg;
+                errEl.style.display = 'block';
+            }
+            showToast(failMsg, 'error');
+
+            const activeUser = session ? session.user : state.getActiveUser();
+            const signeeId = activeUser.userId || activeUser.employeeId || 'USER';
+            state.logAudit(signeeId, 'ESIGN_FAILURE', `FAILED electronic signature password re-authentication for: ${esignPurpose}`);
+            state.save();
+        }
+    } catch (err) {
+        if (errEl) {
+            errEl.textContent = 'Verification error. Please try again.';
+            errEl.style.display = 'block';
+        }
+        showToast('Error verifying electronic signature.', 'error');
     }
 }
 
