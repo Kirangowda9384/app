@@ -206,66 +206,55 @@
 
                 <!-- 1. DASHBOARD PANEL -->
                 <section id="panel-dashboard" class="app-panel active">
-                    <div class="dashboard-grid">
-                        <div class="kpi-row">
-                            <div class="kpi-card">
-                                <div class="kpi-header">
-                                    <span class="kpi-title">Active Batches</span>
-                                    <div class="kpi-icon icon-blue"><i class="fa-solid fa-industry"></i></div>
-                                </div>
-                                <div class="kpi-value" id="kpi-active-batches">0</div>
-                                <div class="kpi-footer">In-progress on manufacturing floor</div>
+                    <div class="domain-grid">
+                        <a href="#masters" class="domain-card">
+                            <div class="domain-icon">
+                                <i class="fa-solid fa-folder-open"></i>
                             </div>
-                            <div class="kpi-card">
-                                <div class="kpi-header">
-                                    <span class="kpi-title">Pending Approvals</span>
-                                    <div class="kpi-icon icon-orange"><i class="fa-solid fa-file-invoice"></i></div>
-                                </div>
-                                <div class="kpi-value" id="kpi-pending-approvals">0</div>
-                                <div class="kpi-footer">Requires review or signature</div>
+                            <div class="domain-title">MASTERS</div>
+                            <div class="domain-desc">Configure, manage, and edit company master data, templates, departments, user groups, and workflows.</div>
+                        </a>
+                        <a href="#execution" class="domain-card">
+                            <div class="domain-icon">
+                                <i class="fa-solid fa-gears"></i>
                             </div>
-                            <div class="kpi-card">
-                                <div class="kpi-header">
-                                    <span class="kpi-title">Active Equipment</span>
-                                    <div class="kpi-icon icon-green"><i class="fa-solid fa-plug-circle-check"></i></div>
-                                </div>
-                                <div class="kpi-value" id="kpi-active-equipment">0</div>
-                                <div class="kpi-footer">Currently operational assets</div>
-                            </div>
-                            <div class="kpi-card">
-                                <div class="kpi-header">
-                                    <span class="kpi-title">Calibration Alerts</span>
-                                    <div class="kpi-icon icon-red" id="kpi-calibration-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                                </div>
-                                <div class="kpi-value" id="kpi-calibration-alerts">0</div>
-                                <div class="kpi-footer">Equipment due for calibration</div>
-                            </div>
-                        </div>
+                            <div class="domain-title">EXECUTION</div>
+                            <div class="domain-desc">Monitor operational batch executions, digital eBMRs, area cleanings, and equipment log entries in real-time.</div>
+                        </a>
+                    </div>
+                </section>
 
-                        <div class="dashboard-charts-grid">
-                            <div class="chart-card">
-                                <h3>Batch Status Distribution</h3>
-                                <div class="chart-container" id="batch-chart-container"></div>
-                            </div>
-                            <div class="chart-card">
-                                <h3>Area Utilization</h3>
-                                <div class="chart-container" id="area-chart-container"></div>
-                            </div>
+                <!-- Masters Landing Area -->
+                <section id="panel-masters" class="app-panel">
+                    <div class="placeholder-panel">
+                        <div class="placeholder-icon">
+                            <i class="fa-solid fa-folder-open"></i>
                         </div>
+                        <div class="placeholder-title">Masters Navigation Area</div>
+                        <div class="placeholder-desc">
+                            This area is prepared to hold enterprise configuration modules. 
+                            Potential future modules (such as User Management, Company/Tenant Master, Location Master, and Product Master) will be registered under this domain.
+                        </div>
+                        <a href="#dashboard" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </section>
 
-                        <div class="dashboard-logs-grid">
-                            <div class="logs-card">
-                                <div class="card-header-actions">
-                                    <h3>Recent Audit Trail Logs</h3>
-                                    <a href="#audit-trail" class="card-link-action">View Full Trail</a>
-                                </div>
-                                <div class="audit-list-mini" id="dashboard-audit-logs"></div>
-                            </div>
-                            <div class="logs-card">
-                                <h3>Active Areas Status</h3>
-                                <div class="area-list-mini" id="dashboard-areas-list"></div>
-                            </div>
+                <!-- Execution Landing Area -->
+                <section id="panel-execution" class="app-panel">
+                    <div class="placeholder-panel">
+                        <div class="placeholder-icon">
+                            <i class="fa-solid fa-gears"></i>
                         </div>
+                        <div class="placeholder-title">Execution Navigation Area</div>
+                        <div class="placeholder-desc">
+                            This area is prepared to hold operational process modules.
+                            Real-time batch execution records and operational flow checklists will be registered under this domain.
+                        </div>
+                        <a href="#dashboard" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                        </a>
                     </div>
                 </section>
 
