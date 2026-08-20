@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — MycoHaven Pharma Digital Management System (MPDMS)</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 20%, hsla(166, 75%, 42%, 0.08), transparent 60%),
+                        radial-gradient(circle at 80% 80%, hsla(210, 90%, 55%, 0.06), transparent 50%),
+                        var(--color-bg-app);
+            padding: 24px;
+            position: relative;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 460px;
+            background-color: var(--color-bg-sidebar);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(16px);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-brand .brand-icon {
+            width: 56px;
+            height: 56px;
+            font-size: 26px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--color-teal), var(--color-blue));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-bg-app);
+            box-shadow: var(--shadow-teal);
+        }
+
+        .login-brand h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--color-text-primary);
+            line-height: 1.1;
+        }
+
+        .login-brand .platform-tag {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--color-teal);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .login-brand .system-title {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 14px;
+            color: var(--color-text-muted);
+            font-size: 15px;
+            pointer-events: none;
+            transition: color var(--transition-fast);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 13px 44px 13px 40px;
+            background-color: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text-primary);
+            font-family: var(--font-primary);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+
+        .login-input:focus {
+            border-color: var(--color-teal);
+            box-shadow: 0 0 0 3px var(--color-teal-glow);
+            background-color: var(--color-bg-card-hover);
+        }
+
+        .login-input:focus + .input-icon-left,
+        .login-input:focus ~ .input-icon-left {
+            color: var(--color-teal);
+        }
+
+        .btn-toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            padding: 6px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color var(--transition-fast);
+        }
+
+        .btn-toggle-password:hover {
+            color: var(--color-text-primary);
+        }
+
+        .form-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 13px;
+        }
+
+        .link-forgot {
+            color: var(--color-teal);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .link-forgot:hover {
+            color: var(--color-text-primary);
+            text-decoration: underline;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--color-teal), hsl(166, 75%, 36%));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: hsl(222, 25%, 10%);
+            font-family: var(--font-primary);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px hsla(166, 75%, 42%, 0.3);
+            margin-top: 6px;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px hsla(166, 75%, 42%, 0.4);
+            filter: brightness(1.06);
+        }
+
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            filter: grayscale(0.2);
+        }
+
+        .login-alert {
+            display: none;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .login-alert-error {
+            background-color: hsla(355, 78%, 56%, 0.12);
+            border: 1px solid hsla(355, 78%, 56%, 0.3);
+            color: hsl(355, 95%, 75%);
+        }
+
+        .login-alert-info {
+            background-color: hsla(210, 90%, 55%, 0.12);
+            border: 1px solid hsla(210, 90%, 55%, 0.3);
+            color: hsl(210, 90%, 75%);
+        }
+
+        .login-footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            font-size: 11px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        .login-footer strong {
+            color: var(--color-text-secondary);
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: hsl(222, 25%, 10%);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="theme-dark">
+    <div class="login-wrapper">
+        <div class="login-card">
+            <!-- Brand Header -->
+            <div class="login-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-flask-vial"></i>
+                </div>
+                <h1>MycoHaven</h1>
+                <div class="platform-tag">PHARMA PLATFORM</div>
+                <div class="system-title">MycoHaven Pharma Digital Management System (MPDMS)</div>
+            </div>
+
+            <!-- Error / Status Alert Banner -->
+            <div id="login-alert" class="login-alert" style="display: none;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="login-alert-text">Invalid User ID or Password</span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" class="login-form" autocomplete="off" novalidate>
+                <div class="form-group">
+                    <label for="login-user-id">User ID / Employee ID</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-shield input-icon-left"></i>
+                        <input 
+                            type="text" 
+                            id="login-user-id" 
+                            class="login-input" 
+                            placeholder="e.g. ADMIN-001" 
+                            required 
+                            autofocus
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon-left"></i>
+                        <input 
+                            type="password" 
+                            id="login-password" 
+                            class="login-input" 
+                            placeholder="Enter password" 
+                            required
+                        >
+                        <button 
+                            type="button" 
+                            id="btn-toggle-password" 
+                            class="btn-toggle-password" 
+                            aria-label="Toggle password visibility" 
+                            tabindex="-1"
+                        >
+                            <i class="fa-regular fa-eye" id="icon-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-meta">
+                    <a href="#" id="link-forgot-password" class="link-forgot">Forgot Password?</a>
+                </div>
+
+                <button type="submit" id="btn-login" class="btn-submit">
+                    <i class="fa-solid fa-right-to-bracket" id="login-btn-icon"></i>
+                    <span id="login-btn-text">Sign In to MPDMS</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <strong>21 CFR Part 11 Compliant</strong> &bull; GAMP 5 Validated System<br>
+                Unauthorized access is strictly prohibited and logged for audit compliance.
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>
