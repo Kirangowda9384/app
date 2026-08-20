@@ -148,9 +148,11 @@ function handlePanelRouting() {
     const isSuperUser = session.user && (
         session.user.role === 'Super Administrator' || 
         session.user.role === 'Super Admin' ||
+        session.user.role === 'Administrator' ||
         session.user.employeeId === 'EMP-SUPER' ||
         session.user.userId === 'ADMIN-001' ||
-        session.user.userId === 'MPDMS-ADMIN-001'
+        session.user.userId === 'MPDMS-ADMIN-001' ||
+        session.user.userId.toLowerCase() === 'kiran-001'
     );
 
     const defaultRoute = '#dashboard';
@@ -422,6 +424,10 @@ export function initUserSwitcher() {
         
         const switched = state.switchSession(selectedCompany, selectedUser);
         if (switched) {
+            const nameEl = document.getElementById('header-user-name');
+            if (nameEl) {
+                nameEl.textContent = switched.name || '';
+            }
             document.getElementById('header-user-role').textContent = switched.designation || switched.userType || 'System';
             updateUISidebarVisibility();
             
@@ -523,6 +529,11 @@ function updateUISidebarVisibility() {
         }
     }
     
+    const nameEl = document.getElementById('header-user-name');
+    if (nameEl) {
+        nameEl.textContent = activeUser.name || '';
+    }
+    
     const roleBadge = document.getElementById('header-user-role');
     if (roleBadge) {
         roleBadge.textContent = activeUser.designation || activeUser.userType || 'System';
@@ -611,9 +622,11 @@ export function initApplication() {
         const isSuperUser = (
             session.user.role === 'Super Administrator' ||
             session.user.role === 'Super Admin' ||
+            session.user.role === 'Administrator' ||
             session.user.employeeId === 'EMP-SUPER' ||
             session.user.userId === 'ADMIN-001' ||
-            session.user.userId === 'MPDMS-ADMIN-001'
+            session.user.userId === 'MPDMS-ADMIN-001' ||
+            session.user.userId.toLowerCase() === 'kiran-001'
         );
         if (isSuperUser) {
             state.activeCompanyId = 'SYSTEM';
