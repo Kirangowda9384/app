@@ -92,7 +92,7 @@ export async function verifyClientCryptoHash(password, storedHashStr) {
         if (parts.length !== 3) return false;
         const iterations = parseInt(parts[0], 10);
         const saltBytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
-        const expectedRaw = atob(parts[2]);
+        const expectedBase64 = parts[2];
 
         const enc = new TextEncoder();
         const keyMaterial = await window.crypto.subtle.importKey(
@@ -114,8 +114,14 @@ export async function verifyClientCryptoHash(password, storedHashStr) {
             256
         );
 
-        const actualRaw = String.fromCharCode(...new Uint8Array(derivedBits));
-        return actualRaw === expectedRaw;
+        const derivedBytes = new Uint8Array(derivedBits);
+        let binaryStr = '';
+        for (let i = 0; i < derivedBytes.byteLength; i++) {
+            binaryStr += String.fromCharCode(derivedBytes[i]);
+        }
+        const actualBase64 = btoa(binaryStr);
+
+        return actualBase64 === expectedBase64;
     } catch (e) {
         return false;
     }
