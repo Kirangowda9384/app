@@ -8,11 +8,11 @@ import { showAuditDetails } from './audit.js';
 
 export function renderDashboard() {
     const activeUser = state.getActiveUser();
-    const isSuperAdmin = activeUser.empId === 'EMP-SUPER';
     
-    // Redirect Super Admin to console (dashboard is for tenant scopes)
-    if (isSuperAdmin) {
-        window.location.hash = '#super-admin-console';
+    // Check if dynamic KPI elements exist in the DOM
+    const kpiEl = document.getElementById('kpi-active-batches');
+    if (!kpiEl) {
+        // Using the new Step 2 two-domain selection layout; no dynamic rendering needed
         return;
     }
 
