@@ -870,16 +870,66 @@
                         <select id="user-dept" class="form-input" required></select>
                     </div>
                     <div class="form-group">
-                        <label>Access / Privileges Configuration</label>
-                        <div style="display: flex; gap: 16px; margin-top: 6px;">
-                            <label class="permission-checkbox-card" style="padding: 10px 16px; flex: 1;">
-                                <input type="checkbox" name="user-privileges" value="Masters"> 
-                                <span style="font-size: 13px; font-weight: 600; margin-left: 6px;">Masters Domain Access</span>
-                            </label>
-                            <label class="permission-checkbox-card" style="padding: 10px 16px; flex: 1;">
-                                <input type="checkbox" name="user-privileges" value="Execution" checked> 
-                                <span style="font-size: 13px; font-weight: 600; margin-left: 6px;">Execution Domain Access</span>
-                            </label>
+                        <label style="font-weight: 700; color: var(--color-teal-glow);">Hierarchical Access Privileges</label>
+                        <div style="border: 1px solid var(--color-border); border-radius: 6px; padding: 12px; max-height: 280px; overflow-y: auto; background: var(--color-bg-secondary);">
+                            
+                            <!-- MASTERS DOMAIN -->
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-weight: 700; font-size: 13px; color: var(--color-teal); display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--color-border); padding-bottom: 4px;">
+                                    <i class="fa-solid fa-folder-open"></i> Masters Domain
+                                </div>
+                                <div style="margin-left: 12px; margin-top: 6px;">
+                                    <div style="font-weight: 600; font-size: 12px; color: var(--color-text-primary);">User Management</div>
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 4px;">
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="View"> View</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="Create"> Create User</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="Edit"> Edit User</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="Activate"> Activate / Deactivate</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="ResetPassword"> Reset Password</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-masters-user_management" value="AssignPrivileges"> Assign Privileges</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EXECUTION DOMAIN -->
+                            <div>
+                                <div style="font-weight: 700; font-size: 13px; color: var(--color-blue); display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--color-border); padding-bottom: 4px;">
+                                    <i class="fa-solid fa-gears"></i> Execution Domain
+                                </div>
+                                
+                                <!-- eBMR -->
+                                <div style="margin-left: 12px; margin-top: 6px;">
+                                    <div style="font-weight: 600; font-size: 12px; color: var(--color-text-primary);">eBMR (Batch Record Execution)</div>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px;">
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="View" checked> View</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="Create"> Create</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="Execute" checked> Execute</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="Submit"> Submit</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="Review"> Review</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-ebmr" value="Approve"> Approve</label>
+                                    </div>
+                                </div>
+
+                                <!-- eLogbook -->
+                                <div style="margin-left: 12px; margin-top: 8px;">
+                                    <div style="font-weight: 600; font-size: 12px; color: var(--color-text-primary);">eLogbook (Area & Equipment Logs)</div>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px;">
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-elogbook" value="View" checked> View</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-elogbook" value="Create"> Create</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-elogbook" value="Execute" checked> Execute</label>
+                                    </div>
+                                </div>
+
+                                <!-- Reports -->
+                                <div style="margin-left: 12px; margin-top: 8px;">
+                                    <div style="font-weight: 600; font-size: 12px; color: var(--color-text-primary);">Reports & Analytics</div>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px;">
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-reports" value="View"> View</label>
+                                        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" name="priv-execution-reports" value="Export"> Export</label>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
