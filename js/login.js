@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const maxAge = 8 * 60 * 60 * 1000;
             const loginTime = session && session.loginTimestamp ? new Date(session.loginTimestamp).getTime() : 0;
             if (session && session.token && (Date.now() - loginTime <= maxAge)) {
-                const target = redirectParam || (session.user && (session.user.role === 'Super Administrator' || session.user.role === 'Super Admin') ? '#super-admin-console' : '#dashboard');
+                const target = redirectParam || '#dashboard';
                 window.location.replace(`index.html${target.startsWith('#') ? target : '#' + target}`);
                 return;
             }
@@ -229,14 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Determine redirect target
                 let targetRoute = redirectParam;
                 if (!targetRoute) {
-                    const isSuper = (
-                        authenticatedUser.role === 'Super Administrator' ||
-                        authenticatedUser.role === 'Super Admin' ||
-                        authenticatedUser.userId.toLowerCase() === 'kiran-001' ||
-                        authenticatedUser.userId.toLowerCase() === 'admin-001' ||
-                        authenticatedUser.employeeId === 'EMP-SUPER'
-                    );
-                    targetRoute = isSuper ? '#super-admin-console' : '#dashboard';
+                    targetRoute = '#dashboard';
                 }
 
                 if (!targetRoute.startsWith('#')) {
