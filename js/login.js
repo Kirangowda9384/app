@@ -1,7 +1,61 @@
 /* ==========================================================================
    MYCOHAVEN PHARMA PLATFORM (MPDMS) — AUTHENTICATION CONTROLLER
-   Handles Client-side Login Interaction, API Communication, and Session Setup
+   Handles Client-side Login Interaction, Hybrid API/Crypto Verification, and Session Setup
    ========================================================================== */
+
+// Fallback Secure PBKDF2 Verification for static/cloud hosting
+const AUTH_VAULT = {
+    users: [
+        {
+            userIds: ['kiran-001', 'admin-001', 'mpdms-admin-001', 'emp-super'],
+            fullName: 'MycoHaven Super Admin',
+            role: 'Super Administrator',
+            department: 'System Administration',
+            designation: 'Super Administrator',
+            employeeId: 'EMP-SUPER',
+            email: 'admin@mycohaven.com',
+            accountStatus: 'Active',
+            passwordChangeRequired: true,
+            // PBKDF2 HMAC-SHA256 hash (100,000 iterations) for Kiran@123
+            hash: '100000:6jiCEXTw/gGfrv+ZbhwA/A==:c8i5Qa9iPErS2rAAEsmY8blLhQ2KtkTxjyAX7aH2jLc='
+        }
+    ]
+};
+
+async function verifyClientCryptoHash(password, storedHashStr) {
+    try {
+        const parts = storedHashStr.split(':');
+        if (parts.length !== 3) return false;
+        const iterations = parseInt(parts[0], 10);
+        const saltBytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
+        const expectedRaw = atob(parts[2]);
+
+        const enc = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            enc.encode(password),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveBits']
+        );
+
+        const derivedBits = await window.crypto.subtle.deriveBits(
+            {
+                name: 'PBKDF2',
+                salt: saltBytes,
+                iterations: iterations,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            256
+        );
+
+        const actualRaw = String.fromCharCode(...new Uint8Array(derivedBits));
+        return actualRaw === expectedRaw;
+    } catch (e) {
+        return false;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('form-login');
@@ -86,11 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             hideAlert();
 
-            const userId = userIdInput.value.trim();
+            const rawUserId = userIdInput.value.trim();
             const password = passwordInput.value;
+            const normalizedUserId = rawUserId.toLowerCase();
 
             // Client-side validation: prevent empty submissions
-            if (!userId) {
+            if (!rawUserId) {
                 showAlert('Please enter your User ID or Employee ID.');
                 userIdInput.focus();
                 return;
@@ -104,60 +159,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setLoading(true);
 
+            let authSuccess = false;
+            let authenticatedUser = null;
+            let sessionToken = null;
+
             try {
+                // Try backend API first
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ userId, password })
-                });
+                    body: JSON.stringify({ userId: rawUserId, password })
+                }).catch(() => null);
 
-                const data = await response.json().catch(() => ({}));
-
-                if (response.ok && data.success) {
-                    // Store authenticated session token and sanitized user context
-                    const sessionData = {
-                        token: data.sessionToken,
-                        user: data.user,
-                        loginTimestamp: new Date().toISOString()
-                    };
-
-                    sessionStorage.setItem('mpdms_auth_session', JSON.stringify(sessionData));
-
-                    // Determine redirect target
-                    let targetRoute = redirectParam;
-                    if (!targetRoute) {
-                        const isSuper = (
-                            data.user.role === 'Super Administrator' ||
-                            data.user.role === 'Super Admin' ||
-                            data.user.userId === 'ADMIN-001' ||
-                            data.user.userId === 'MPDMS-ADMIN-001' ||
-                            data.user.employeeId === 'EMP-SUPER'
-                        );
-                        targetRoute = isSuper ? '#super-admin-console' : '#dashboard';
+                if (response && response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    if (data.success) {
+                        authSuccess = true;
+                        authenticatedUser = data.user;
+                        sessionToken = data.sessionToken;
                     }
-
-                    if (!targetRoute.startsWith('#')) {
-                        targetRoute = '#' + targetRoute;
-                    }
-
-                    loginBtnText.textContent = 'Authenticated. Opening MPDMS...';
-                    setTimeout(() => {
-                        window.location.replace(`index.html${targetRoute}`);
-                    }, 350);
-                } else {
+                } else if (response && (response.status === 401 || response.status === 403 || response.status === 400)) {
+                    // Backend explicitly rejected credentials
+                    const data = await response.json().catch(() => ({}));
                     const errorMsg = data.message || 'Invalid User ID or Password';
                     showAlert(errorMsg);
                     passwordInput.value = '';
                     passwordInput.focus();
+                    setLoading(false);
+                    return;
                 }
-            } catch (err) {
-                showAlert('Unable to reach authentication service. Please check network connection.');
-            } finally {
-                setLoading(false);
+            } catch (err) {}
+
+            // Hybrid Client-side Crypto Fallback (for static hosting on app.mycohaven.com)
+            if (!authSuccess) {
+                const vaultUser = AUTH_VAULT.users.find(u => u.userIds.includes(normalizedUserId));
+                if (vaultUser && vaultUser.accountStatus === 'Active') {
+                    const isCorrect = await verifyClientCryptoHash(password, vaultUser.hash);
+                    if (isCorrect) {
+                        authSuccess = true;
+                        sessionToken = 'mpdms_' + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+                        authenticatedUser = {
+                            userId: rawUserId,
+                            employeeId: vaultUser.employeeId,
+                            fullName: vaultUser.fullName,
+                            email: vaultUser.email,
+                            role: vaultUser.role,
+                            department: vaultUser.department,
+                            designation: vaultUser.designation,
+                            accountStatus: vaultUser.accountStatus,
+                            passwordChangeRequired: vaultUser.passwordChangeRequired
+                        };
+                    }
+                }
             }
+
+            if (authSuccess && authenticatedUser) {
+                // Store authenticated session token and sanitized user context
+                const sessionData = {
+                    token: sessionToken,
+                    user: authenticatedUser,
+                    loginTimestamp: new Date().toISOString()
+                };
+
+                sessionStorage.setItem('mpdms_auth_session', JSON.stringify(sessionData));
+
+                // Determine redirect target
+                let targetRoute = redirectParam;
+                if (!targetRoute) {
+                    const isSuper = (
+                        authenticatedUser.role === 'Super Administrator' ||
+                        authenticatedUser.role === 'Super Admin' ||
+                        authenticatedUser.userId.toLowerCase() === 'kiran-001' ||
+                        authenticatedUser.userId.toLowerCase() === 'admin-001' ||
+                        authenticatedUser.employeeId === 'EMP-SUPER'
+                    );
+                    targetRoute = isSuper ? '#super-admin-console' : '#dashboard';
+                }
+
+                if (!targetRoute.startsWith('#')) {
+                    targetRoute = '#' + targetRoute;
+                }
+
+                loginBtnText.textContent = 'Authenticated. Opening MPDMS...';
+                setTimeout(() => {
+                    window.location.replace(`index.html${targetRoute}`);
+                }, 350);
+            } else {
+                showAlert('Invalid User ID or Password');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+
+            setLoading(false);
         });
     }
 
