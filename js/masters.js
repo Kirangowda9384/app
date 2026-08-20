@@ -100,9 +100,64 @@ function renderUsers() {
         tbody.appendChild(tr);
     });
 
+    let currentWizardStep = 1;
+
+    function setWizardStep(step) {
+        currentWizardStep = step;
+        const step1Container = document.getElementById('wizard-step-1');
+        const step2Container = document.getElementById('wizard-step-2');
+        const modalTitle = document.getElementById('modal-user-title');
+        const tab1 = document.getElementById('step-tab-1');
+        const tab2 = document.getElementById('step-tab-2');
+        const err1 = document.getElementById('step1-error-msg');
+        const err2 = document.getElementById('step2-error-msg');
+
+        if (err1) err1.style.display = 'none';
+        if (err2) err2.style.display = 'none';
+
+        if (step === 1) {
+            if (modalTitle) modalTitle.textContent = 'CREATE USER — STEP 1 OF 2';
+            if (step1Container) step1Container.style.display = 'block';
+            if (step2Container) step2Container.style.display = 'none';
+
+            if (tab1) {
+                tab1.style.background = 'rgba(33, 150, 243, 0.15)';
+                tab1.style.borderColor = 'var(--color-blue)';
+                tab1.style.color = 'var(--color-blue)';
+                const numSpan = tab1.querySelector('span:first-child');
+                if (numSpan) { numSpan.style.background = 'var(--color-blue)'; numSpan.style.color = '#fff'; }
+            }
+            if (tab2) {
+                tab2.style.background = 'var(--color-bg-secondary)';
+                tab2.style.borderColor = 'var(--color-border)';
+                tab2.style.color = 'var(--color-text-muted)';
+                const numSpan = tab2.querySelector('span:first-child');
+                if (numSpan) { numSpan.style.background = 'var(--color-bg-tertiary)'; numSpan.style.color = 'var(--color-text-muted)'; }
+            }
+        } else if (step === 2) {
+            if (modalTitle) modalTitle.textContent = 'CREATE USER — STEP 2 OF 2';
+            if (step1Container) step1Container.style.display = 'none';
+            if (step2Container) step2Container.style.display = 'block';
+
+            if (tab1) {
+                tab1.style.background = 'var(--color-bg-secondary)';
+                tab1.style.borderColor = 'var(--color-border)';
+                tab1.style.color = 'var(--color-text-muted)';
+                const numSpan = tab1.querySelector('span:first-child');
+                if (numSpan) { numSpan.style.background = 'var(--color-teal)'; numSpan.style.color = '#fff'; }
+            }
+            if (tab2) {
+                tab2.style.background = 'rgba(33, 150, 243, 0.15)';
+                tab2.style.borderColor = 'var(--color-blue)';
+                tab2.style.color = 'var(--color-blue)';
+                const numSpan = tab2.querySelector('span:first-child');
+                if (numSpan) { numSpan.style.background = 'var(--color-blue)'; numSpan.style.color = '#fff'; }
+            }
+        }
+    }
+
     document.getElementById('btn-add-user').onclick = () => {
         editingEmpId = null;
-        document.getElementById('modal-user-title').textContent = 'Create User Account';
         document.getElementById('user-emp-id').value = '';
         document.getElementById('user-emp-id').readOnly = false;
         document.getElementById('user-name').value = '';
@@ -119,8 +174,56 @@ function renderUsers() {
         if (defaultEbmrExe) defaultEbmrExe.checked = true;
 
         populateDropdown('user-dept', state.getTenantDepartments().map(d => d.name));
+        setWizardStep(1);
         openModal('modal-user');
     };
+
+    const btnNext = document.getElementById('btn-wizard-next');
+    if (btnNext) {
+        btnNext.onclick = () => {
+            const userId = document.getElementById('user-emp-id').value.trim();
+            const fullName = document.getElementById('user-name').value.trim();
+            const role = document.getElementById('user-role').value;
+            const status = document.getElementById('user-status').value;
+            const dept = document.getElementById('user-dept').value;
+            const err1 = document.getElementById('step1-error-msg');
+
+            if (!userId) {
+                if (err1) { err1.textContent = 'Please enter a valid User ID.'; err1.style.display = 'block'; }
+                return;
+            }
+            if (!fullName) {
+                if (err1) { err1.textContent = 'Please enter Employee / User Name.'; err1.style.display = 'block'; }
+                return;
+            }
+            if (!role) {
+                if (err1) { err1.textContent = 'Please select a Role.'; err1.style.display = 'block'; }
+                return;
+            }
+            if (!status) {
+                if (err1) { err1.textContent = 'Please select Account Status.'; err1.style.display = 'block'; }
+                return;
+            }
+            if (!dept) {
+                if (err1) { err1.textContent = 'Please select a Department.'; err1.style.display = 'block'; }
+                return;
+            }
+            if (state.users.some(u => (u.userId || u.empId || '').toLowerCase() === userId.toLowerCase())) {
+                if (err1) { err1.textContent = `User ID '${userId}' already exists. Please choose a different ID.`; err1.style.display = 'block'; }
+                return;
+            }
+
+            if (err1) err1.style.display = 'none';
+            setWizardStep(2);
+        };
+    }
+
+    const btnBack = document.getElementById('btn-wizard-back');
+    if (btnBack) {
+        btnBack.onclick = () => {
+            setWizardStep(1);
+        };
+    }
 
     // Attach Status Toggle Listeners (Activate / Deactivate)
     tbody.querySelectorAll('.btn-toggle-status').forEach(btn => {
@@ -187,6 +290,9 @@ document.getElementById('form-user').onsubmit = async (e) => {
     const confirmPassword = document.getElementById('user-confirm-password') ? document.getElementById('user-confirm-password').value : '';
     const role = document.getElementById('user-role') ? document.getElementById('user-role').value : 'Employee';
     const status = document.getElementById('user-status') ? document.getElementById('user-status').value : 'Active';
+    const dept = document.getElementById('user-dept') ? document.getElementById('user-dept').value : 'General';
+    const err2 = document.getElementById('step2-error-msg');
+
     const privileges = {
         masters: {
             user_management: Array.from(document.querySelectorAll('input[name="priv-masters-user_management"]:checked')).map(cb => cb.value)
@@ -204,21 +310,23 @@ document.getElementById('form-user').onsubmit = async (e) => {
     }
 
     if (!password) {
-        showToast('Password is required for user creation.', 'error');
+        if (err2) { err2.textContent = 'Initial Password is required.'; err2.style.display = 'block'; }
         return;
     }
 
     if (password !== confirmPassword) {
-        showToast('Passwords do not match.', 'error');
+        if (err2) { err2.textContent = 'Passwords do not match. Please re-enter.'; err2.style.display = 'block'; }
         return;
     }
+
+    if (err2) err2.style.display = 'none';
 
     if (state.users.some(u => (u.userId || u.empId || '').toLowerCase() === userId.toLowerCase())) {
         showToast(`User ID '${userId}' already exists.`, 'error');
         return;
     }
 
-    // Call backend endpoint to persist user securely with hashed password
+    // Call backend endpoint to persist user securely with PBKDF2 hashed password
     const sessionStr = sessionStorage.getItem('mpdms_auth_session');
     const session = sessionStr ? JSON.parse(sessionStr) : null;
     const token = session ? session.token : '';
@@ -236,14 +344,19 @@ document.getElementById('form-user').onsubmit = async (e) => {
 
     try {
         if (token) {
-            await fetch('/api/users', {
+            const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload)
-            }).catch(() => null);
+            });
+            const data = await res.json();
+            if (!data.success) {
+                if (err2) { err2.textContent = data.message || 'Failed to create user.'; err2.style.display = 'block'; }
+                return;
+            }
         }
     } catch (err) {}
 
@@ -261,7 +374,6 @@ document.getElementById('form-user').onsubmit = async (e) => {
         accountStatus: status,
         active: status === 'Active',
         privileges: privileges,
-        moduleAccess: privileges.includes('Masters') ? ['Masters', 'eLogbook', 'eBMR'] : ['eBMR', 'eLogbook'],
         dept: dept
     };
 
@@ -269,7 +381,9 @@ document.getElementById('form-user').onsubmit = async (e) => {
     state.save();
     closeModal('modal-user');
     renderUsers();
-    showToast(`User account '${userId}' created successfully.`);
+    
+    // Display safe success message without exposing password
+    showToast(`User created successfully. User ID: ${userId} | Role: ${role} | Status: ${status}`);
 };
 
 // ==========================================================================
